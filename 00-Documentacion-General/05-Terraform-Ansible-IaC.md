@@ -1,5 +1,7 @@
 # 05 — Infraestructura como Código: Terraform + Ansible
 
+> **Estado real de implementación**: el repositorio de código vive en [`infra/`](../../infra/) (hermano de esta carpeta de documentación). Los roles de **Fase 2** (`mailserver`) y **Fase 3** (`vpn`, `intranet`, `monitoring`, `zabbix_agent`) ya están escritos y listos para desplegar, junto con un rol `common` compartido (Docker + hardening base). Solo falta **Fase 4** (Terraform de Sergio + roles de Ansible para webserver/dhcp/proxy/vyos_router). Ver [infra/README.md](../../infra/README.md) para el estado detallado por fase.
+
 ## 1. Por qué esta combinación (recordatorio)
 
 - **Terraform** provisiona (VMs, discos, redes/bridges en Proxmox) — declara el "qué".

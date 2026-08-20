@@ -60,11 +60,19 @@ Aunque solo la Entrega 1 es inminente, **las Fases 2, 3 y 4 ya están completame
 
 ## Fase 1 — Diseño de la Red Corporativa (2 pts) — Entrega 1, 23 de agosto
 
-| Documento | Contenido |
-|---|---|
-| [Fase1-Diseno-Red-Corporativa.md](Fase-1-Diseno-Red-Corporativa/01-Fase1-Diseno-Red-Corporativa.md) | Análisis de necesidades, diseño lógico/físico, cableado, diagrama de planta, materiales |
-| [Politicas-Seguridad.md](Fase-1-Diseno-Red-Corporativa/09-Politicas-Seguridad.md) | Políticas lógicas y físicas de seguridad |
-| [Data-Center-Tier4.md](Fase-1-Diseno-Red-Corporativa/10-Data-Center-Tier4.md) | Diseño del Data Center según TIA-942 / Uptime Institute |
+Un documento por cada uno de los 6 puntos que exige el enunciado — índice completo y metodología en [00-Introduccion-y-Metodologia.md](Fase-1-Diseno-Red-Corporativa/00-Introduccion-y-Metodologia.md).
+
+| # | Documento | Contenido | Responsable |
+|---|---|---|---|
+| 1-2 | [Analisis-Necesidades-Tecnologicas.md](Fase-1-Diseno-Red-Corporativa/01-Analisis-Necesidades-Tecnologicas.md) + [Requerimientos-Costos-Trafico-Cultura.md](Fase-1-Diseno-Red-Corporativa/02-Requerimientos-Costos-Trafico-Cultura.md) | Perfil de la organización, MoSCoW, tráfico/QoS, costos, **cultura organizacional en 7 dimensiones** | **Melany** (coordina toda la Fase 1) |
+| 3 | [Diseno-Logico.md](Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) | Modelo jerárquico, diagrama lógico completo, QoS/DSCP, enrutamiento, direccionamiento | **Jeferson** (continúa en Fase 3) |
+| 4 | [Diseno-Fisico.md](Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) | Planta, TR/IDF, cableado estructurado, certificación, rack, BOM con memoria de cálculo | **Luis** (continúa en Fase 4 físico) |
+| 5 | [Politicas-Seguridad.md](Fase-1-Diseno-Red-Corporativa/05-Politicas-Seguridad.md) | 15 políticas lógicas + 7 físicas, marco ISO 27001/NIST, RACI de seguridad | **Samuel** (gobernanza/PRs + Fase 2) |
+| 6 | [Data-Center-Tier4.md](Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) | Tier 4 con memoria de cálculo de UPS/HVAC, estándares TIA-942/NFPA/ASHRAE | **Sergio** (su SDN vive ahí, Fase 4) |
+
+Detalle de por qué cada punto le tocó a esa persona en [11-Equipo-y-Responsabilidades.md](00-Documentacion-General/11-Equipo-y-Responsabilidades.md) §1.1.
+
+**Entregable en Word (para subir/imprimir)**: [Fase1-VirtualSolutions-Entrega.docx](Fase-1-Diseno-Red-Corporativa/Fase1-VirtualSolutions-Entrega.docx) — los 6 puntos ya compilados en un solo documento con portada, índice automático y los 3 diagramas embebidos como imagen. Se regenera desde estos mismos `.md` si el contenido cambia (avisen antes de editar el `.docx` a mano, para no perder la sincronía).
 
 ## Fase 2 — Servidor de Correo (4 pts) — Entrega 2, 19 de septiembre
 
@@ -93,13 +101,14 @@ Todos los diagramas de este proyecto ya están diseñados y completos como códi
 | Diagrama | Dónde está el Mermaid ya definido | Responsable de pasarlo a visual |
 |---|---|---|
 | Arquitectura general de la solución | [00-Arquitectura-General.md](00-Documentacion-General/00-Arquitectura-General.md) §2 | Melany |
-| Planta por piso (4 niveles) | [Fase1](Fase-1-Diseno-Red-Corporativa/01-Fase1-Diseno-Red-Corporativa.md) §4.1 | Melany |
-| Elevación de rack del Data Center | [Fase1](Fase-1-Diseno-Red-Corporativa/01-Fase1-Diseno-Red-Corporativa.md) §4.2 (tabla → convertir a rack visual) | Melany |
+| **Diseño lógico — red completa (4 switches: distribución + 3 IDF, VLANs por piso)** | [03-Diseno-Logico.md](Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) §2 | Jeferson |
+| Planta por piso (4 niveles) | [04-Diseno-Fisico.md](Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §2 | Luis |
+| Elevación de rack del Data Center | [04-Diseno-Fisico.md](Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §5 (tabla → convertir a rack visual) | Luis |
 | Flujo de correo (intra/inter-dominio + anti-spam) | [Fase2](Fase-2-Servidor-Correo/02-Fase2-Servidor-Correo.md) §2.1 | Samuel |
 | Zonas DMZ / Internet / LAN interna | [Fase3](Fase-3-LAN-WAN-VPN-Seguridad/03-Fase3-LAN-WAN-VPN-Seguridad.md) §4 | Jeferson |
 | Topología física + SDN (R1, switch, VR1, SV1) | [Fase4](Fase-4-Nube-Privada-SDN/04-Fase4-Nube-Privada-SDN.md) §2 | Sergio |
 
-No hace falta un "diagramador" único dedicado — cada quien pasa a visual el diagrama de su propia fase, porque ya la conoce a fondo y es quien la va a presentar. Luis no tiene diagrama propio; su rol es validar que la parte física de los diagramas de Melany y Sergio quede fiel a lo que realmente compra e instala.
+No hace falta un "diagramador" único dedicado — cada quien pasa a visual el diagrama de su propio punto/fase, porque ya lo conoce a fondo y es quien lo va a presentar (ver división completa de la Fase 1 en [11-Equipo-y-Responsabilidades.md](00-Documentacion-General/11-Equipo-y-Responsabilidades.md) §1.1).
 
 ---
 
@@ -131,7 +140,7 @@ No hace falta un "diagramador" único dedicado — cada quien pasa a visual el d
 | Switch virtual (SV1) | **Open vSwitch (OVS)** | Estándar de facto para SDN open source, soporta VLAN/trunk |
 | Router virtual (VR1) | **VyOS** | Router Linux open source, soporta OSPF/BGP dinámico, se automatiza con Ansible |
 | Core físico (R1) | **MikroTik RouterOS (hEX RB750Gr3)** | Barato en Guatemala (~Q600), soporta OSPF, VLANs, firewall |
-| Switch físico | **TP-Link TL-SG105** (no administrable) | Cumple el requisito de la Fase 4 sin pagar de más (~Q214) |
+| Switch físico | **TP-Link Easy Smart** (VLAN 802.1Q, 4p PoE) | Barato (~Q318) y permite demostrar segmentación VLAN físicamente, no solo en diagramas |
 | IaC | **Terraform** (provider `bpg/proxmox`) + **Ansible** | Terraform provisiona VMs/red, Ansible configura servicios dentro |
 | Correo | **Postfix + Dovecot + rspamd** | Open source, on-premise, anti-spam integrado |
 | Monitoreo | **Zabbix** | Monitoreo de red + servidores en una sola plataforma open source |
@@ -141,8 +150,8 @@ No hace falta un "diagramador" único dedicado — cada quien pasa a visual el d
 
 ## Próximo paso sugerido
 
-1. Cada quien lee su documento en `Responsables/` y el/los documento(s) técnico(s) que le corresponden.
-2. Melany pasa sus 3 diagramas a draw.io esta semana (Entrega 1 es la más próxima).
+1. Cada quien lee su documento en `Responsables/` — ahora incluye su punto de Fase 1 asignado (ver [11](00-Documentacion-General/11-Equipo-y-Responsabilidades.md) §1.1).
+2. Los 5 revisan y ajustan su punto de Fase 1 esta semana (Entrega 1 es la más próxima) y pasan su diagrama correspondiente a draw.io: Melany (arquitectura general), Jeferson (diseño lógico), Luis (planta + rack).
 3. Luis coordina la compra del equipo físico — mientras antes, más tiempo de prueba real.
 4. Samuel prepara el SSD externo con Proxmox VE instalado.
 5. Sergio y Jeferson arrancan el `network-inventory.yaml` en conjunto (la tabla de VLANs de Jeferson es el insumo).

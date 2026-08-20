@@ -80,6 +80,17 @@ Este diagrama ya representa el flujo completo diseñado en las secciones 2 y 4 �
 
 Alternativa aún más rápida de mantener (recomendada si el tiempo apremia): usar el proyecto open source **[docker-mailserver](https://github.com/docker-mailserver/docker-mailserver)** dentro de la VM — es Postfix+Dovecot+rspamd empaquetado, 100% open source, configurado por variables de entorno + `setup.sh`, y Terraform/Ansible solo necesitan entregar el `docker-compose.yml` generado desde el inventario. Reduce el tiempo de esta fase de días a horas.
 
+## 5.1 Estado de implementación: ✅ código listo
+
+Se optó por la ruta docker-mailserver. El rol de Ansible ya está escrito y listo para desplegar en cuanto exista la VM `vm-mail` — vive en `infra/ansible/roles/mailserver/` (repositorio de código, hermano de esta carpeta de documentación). Incluye:
+
+- `docker-compose.yml` (mailserver + Roundcube) generado por plantilla.
+- Creación idempotente de cuentas para los 2 dominios (`setup-accounts.sh`).
+- Generación de llaves DKIM por dominio y un script que imprime los registros DNS de referencia (`generate-dns-records.sh`).
+- Script de prueba `infra/scripts/test-mailflow.sh` que cubre exactamente el checklist de la sección 6 de abajo.
+
+Ver [infra/README.md](../../infra/README.md) para los pasos de despliegue.
+
 ## 6. Pruebas de aceptación de la fase
 
 - [ ] Enviar correo de `usuario1@virtualsolutions.lab` a `usuario2@virtualsolutions.lab` (intra-dominio).
@@ -87,3 +98,5 @@ Alternativa aún más rápida de mantener (recomendada si el tiempo apremia): us
 - [ ] Verificar cabeceras DKIM/SPF válidas con `swaks` o `mail-tester.com` (self-hosted alternative: `rspamd` test tools).
 - [ ] Enviar correo de prueba con contenido de spam conocido (GTUBE) y confirmar que se marca/rechaza.
 - [ ] Acceso IMAP funcional vía Roundcube o Thunderbird.
+
+Las primeras 4 se automatizaron en `infra/scripts/test-mailflow.sh <IP> <pass_ana> <pass_carlos>` — corre las 3 pruebas de entrega + la prueba GTUBE y da un resumen PASS/FAIL.

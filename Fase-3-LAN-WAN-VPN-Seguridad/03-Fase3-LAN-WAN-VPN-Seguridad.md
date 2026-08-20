@@ -84,8 +84,20 @@ Este diagrama representa exactamente las reglas ya definidas arriba — falta pa
 |---|---|
 | Internet | 2 ISP + failover automático en R1 |
 | Enrutamiento Core↔Nube | OSPF (convergencia dinámica ante falla de enlace, no rutas estáticas — cumple restricción explícita del enunciado) |
-| Data Center | Diseño Tier 4 — ver [10-Data-Center-Tier4.md](../Fase-1-Diseno-Red-Corporativa/10-Data-Center-Tier4.md) (energía y enfriamiento 2N) |
+| Data Center | Diseño Tier 4 — ver [06-Data-Center-Tier4.md](../Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) (energía y enfriamiento 2N) |
 | Servicios críticos (correo, web) | Backups automatizados de VMs vía Proxmox Backup Server (snapshot + restore rápido); para producción real se recomienda a futuro clúster Proxmox de 3 nodos con Ceph, documentado como roadmap, no como parte obligatoria de esta entrega de laboratorio |
 | Datos | Snapshots diarios automatizados (cron + `vzdump` de Proxmox) hacia disco secundario |
 
 Nota de alcance: para el laboratorio individual con 1 servidor físico, la HA a nivel de hipervisor (clúster multi-nodo) queda como **diseño documentado para producción** (mencionado explícitamente aquí para cumplir el requisito de diseño), mientras que la demo funcional usa el único nodo con backups automatizados como mitigación práctica.
+
+## 6. Estado de implementación: ✅ código listo
+
+Los 3 servicios de esta fase ya están escritos como roles de Ansible en [`infra/ansible/roles/`](../../infra/ansible/roles/):
+
+| Servicio | Rol | Cómo se implementó |
+|---|---|---|
+| VPN de acceso remoto | `vpn/` | WireGuard vía imagen `linuxserver/wireguard` — autogenera perfiles de cliente (.conf + QR) para el pool VLAN 200 |
+| Intranet | `intranet/` | Nextcloud + MariaDB vía docker-compose, admin autoprovisionado |
+| Monitoreo | `monitoring/` + `zabbix_agent/` | Zabbix server+web+PostgreSQL, más un rol de agente liviano que se aplica a todas las VMs del proyecto |
+
+Script de verificación: `infra/scripts/test-fase3-services.sh <ip_intranet> <ip_monitor> <ip_vpn>` — confirma que Nextcloud y Zabbix respondan por HTTP y que WireGuard tenga peers activos. Pasos completos de despliegue en [infra/README.md](../../infra/README.md).

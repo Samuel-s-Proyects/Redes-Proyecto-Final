@@ -48,7 +48,7 @@ flowchart TB
 
     subgraph DC["Data Center - Piso 1 (Tier 4)"]
         R1["Router Físico Core R1\nMikroTik RouterOS\nOSPF"]
-        SWF["Switch Físico\nTP-Link TL-SG105"]
+        SWF["Switch Físico\nTP-Link Easy Smart (VLAN 802.1Q)"]
         HOST["Host físico de prueba\n(laptop/PC)"]
     end
 

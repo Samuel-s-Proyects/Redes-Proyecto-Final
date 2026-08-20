@@ -14,6 +14,20 @@ El PDF original ("Proyecto Final Redes-2025") indica en la página 5: **"Máximo
 | 4 | Luis | Core físico y networking — Fase 4 (parte física) + Presupuesto/equipo |
 | 5 | Jeferson | LAN/WAN/VPN/Intranet/Monitoreo — Fase 3 |
 
+## 1.1 División de la Fase 1 (Entrega 1) entre los 5
+
+La Fase 1 tiene 6 puntos exigidos por el enunciado (ver [índice](../Fase-1-Diseno-Red-Corporativa/00-Introduccion-y-Metodologia.md)) — se repartieron entre los 5, cada uno con el punto que mejor conecta con lo que ya va a hacer más adelante en el proyecto, para que no esté aprendiendo desde cero un tema que después abandona:
+
+| Punto de Fase 1 | Responsable | Por qué le toca a esa persona |
+|---|---|---|
+| 1-2. Necesidades + Requerimientos/Costos/Tráfico/Cultura | **Melany** | Es el análisis que sostiene todo el resto del diseño — Melany coordina la Fase 1 completa, tiene sentido que sea quien primero entienda el negocio a fondo |
+| 3. Diseño lógico (VLANs, switches, trunk, direccionamiento) | **Jeferson** | Es la continuación exacta de lo que hace en Fase 3 (tabla de VLANs, LAN/WAN) — mismo tema, más adelante en el tiempo |
+| 4. Diseño físico (cableado, planta, materiales, presupuesto) | **Luis** | Es la continuación de lo que hace en Fase 4 (Core físico, compra de equipo, presupuesto) — ya va a manejar materiales y costos, aquí lo hace a escala de toda la empresa |
+| 5. Políticas de Seguridad | **Samuel** | Encaja con su rol de aprobador de PRs/gobernanza del proyecto y con la seguridad del correo (Fase 2) — ya piensa en controles de acceso y cifrado en su propia fase |
+| 6. Diseño de Data Center (Tier 4) | **Sergio** | Su Nube Privada (Fase 4) vive físicamente en el Data Center que aquí se diseña — entender los requisitos de energía/enfrionamiento/disponibilidad del sitio donde corren sus VMs es directamente relevante para su propio módulo |
+
+Melany sigue siendo la coordinadora general de la Fase 1 (arma el documento 00 de índice/metodología y da seguimiento a que los 6 puntos queden consistentes entre sí), pero cada quien es el experto y defensor de su propio punto — igual que ya se acordó para las Fases 2-4 (cada quien defiende lo suyo).
+
 ## 2. Matriz de responsabilidades (RACI) por documento
 
 **R** = Responsable de escribir/implementar · **A** = Aprueba/revisa antes de entregar · **C** = Consultado (aporta pero no es dueño) · **I** = Informado
@@ -21,7 +35,12 @@ El PDF original ("Proyecto Final Redes-2025") indica en la página 5: **"Máximo
 | Documento / Componente | Samuel | Sergio | Melany | Luis | Jeferson |
 |---|---|---|---|---|---|
 | [00 Arquitectura General](00-Arquitectura-General.md) | A | C | C | C | C |
-| [01 Fase 1 — Diseño Red Corporativa](../Fase-1-Diseno-Red-Corporativa/01-Fase1-Diseno-Red-Corporativa.md) | I | I | **R** | C | I |
+| **Fase 1** — [00 Índice/Metodología](../Fase-1-Diseno-Red-Corporativa/00-Introduccion-y-Metodologia.md) | I | I | **R** (coordina) | I | I |
+| **Fase 1** — [01 Necesidades](../Fase-1-Diseno-Red-Corporativa/01-Analisis-Necesidades-Tecnologicas.md) + [02 Requerim./Costos/Tráfico/Cultura](../Fase-1-Diseno-Red-Corporativa/02-Requerimientos-Costos-Trafico-Cultura.md) | I | I | **R** | C | I |
+| **Fase 1** — [03 Diseño Lógico](../Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) | I | I | C | I | **R** |
+| **Fase 1** — [04 Diseño Físico](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) | I | I | C | **R** | I |
+| **Fase 1** — [05 Políticas de Seguridad](../Fase-1-Diseno-Red-Corporativa/05-Politicas-Seguridad.md) | **R** | I | C | I | I |
+| **Fase 1** — [06 Data Center Tier 4](../Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) | I | **R** | C | I | I |
 | [02 Fase 2 — Servidor de Correo](../Fase-2-Servidor-Correo/02-Fase2-Servidor-Correo.md) | **R** | I | I | I | C |
 | [03 Fase 3 — LAN/WAN/VPN/Seguridad](../Fase-3-LAN-WAN-VPN-Seguridad/03-Fase3-LAN-WAN-VPN-Seguridad.md) | C | I | I | I | **R** |
 | [04 Fase 4 — Nube Privada/SDN](../Fase-4-Nube-Privada-SDN/04-Fase4-Nube-Privada-SDN.md) | C (Ansible de las VMs) | **R** (Terraform/SDN) | I | **R** (Core físico/OSPF) | I |
@@ -29,8 +48,6 @@ El PDF original ("Proyecto Final Redes-2025") indica en la página 5: **"Máximo
 | [06 Automatización con IA](06-Automatizacion-con-IA.md) | A | C | C | C | C |
 | [07 Direccionamiento IP/VLANs](07-Direccionamiento-IP-VLANs.md) | C | C | C | I | **R** |
 | [08 Equipo Físico/Presupuesto](08-Equipo-Fisico-Presupuesto.md) | C | I | I | **R** | C |
-| [09 Políticas de Seguridad](../Fase-1-Diseno-Red-Corporativa/09-Politicas-Seguridad.md) | C | C | **R** | C | C |
-| [10 Data Center Tier 4](../Fase-1-Diseno-Red-Corporativa/10-Data-Center-Tier4.md) | I | I | **R** | C | I |
 | Hardware físico (Proxmox host, R1, switch, cableado) | **R** (custodio del equipo) | I | I | **R** (compra/configuración de R1) | I |
 | Pruebas de conectividad end-to-end (Fase 4, sección 6) | C | C | I | C | I → **R compartido entre Sergio y Luis**, Samuel valida desde el lado de las VMs |
 | Consolidación final / entrega | **A** | C | C | C | C |

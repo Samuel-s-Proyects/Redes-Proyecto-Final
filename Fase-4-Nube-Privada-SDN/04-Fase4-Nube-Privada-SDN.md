@@ -11,8 +11,8 @@ Esta es la fase de mayor peso y la que se prueba en vivo. Aquí se detalla exact
 | Proxy restringe Internet, solo puerto 80 disponible para llegar al Web Server | Squid en modo *forward proxy* obligatorio para salida a Internet + regla de firewall en R1 que bloquea 80/tcp saliente directo excepto hacia la IP del Web Server |
 | Nube privada virtual: Switch Virtual SV1 + Router Virtual VR1 | Open vSwitch (`SV1`) + VyOS (`VR1`), ambos VMs/bridges dentro de Proxmox |
 | Core físico R1 | MikroTik RouterOS físico (o GNS3 solo si no hay equipo — no es el caso acá) |
-| 1 switch físico para clientes | MikroTik CSS610 físico |
-| 1 host físico en el Data Center para pruebas | Laptop/PC conectado al switch físico |
+| 1 switch físico para clientes | TP-Link Easy Smart (VLAN 802.1Q) físico — ver [08-Equipo-Fisico-Presupuesto.md](../00-Documentacion-General/08-Equipo-Fisico-Presupuesto.md) |
+| 1 host físico en el Data Center para pruebas | El PDF pide mínimo 1 — se conectan 2 (en VLANs distintas) para demostrar segmentación real, no solo el mínimo exigido |
 | Protocolo de enrutamiento dinámico R1↔VR1, a discreción | **OSPF** (área única 0.0.0.0) |
 | Conexión R1↔VR1 con UTP Cat 6 si es físico, si no GNS3 conectado a la SDN | Cable físico Cat 6 desde el puerto del MikroTik hasta la NIC del servidor Proxmox dedicada a la SDN |
 | SDN 100% Open Source, mínimo 1 switch + 1 router virtual, **NO** GNS3/VMware | Open vSwitch + VyOS, ambos corriendo sobre KVM (Proxmox), sin GNS3 |
@@ -28,10 +28,12 @@ flowchart LR
         ISP1((ISP1)) --> R1
         ISP2((ISP2)) --> R1
         R1["R1 - MikroTik RouterOS\nCore, OSPF Area 0"]
-        SWF["Switch físico\nMikroTik CSS610"]
-        HOST["Host físico de prueba"]
-        R1 ---|UTP Cat6| SWF
-        SWF ---|UTP Cat6| HOST
+        SWF["Switch físico\nTP-Link Easy Smart\nVLAN 802.1Q"]
+        HOST1["Host de prueba 1\nPuerto acceso VLAN 10 (Admin)"]
+        HOST2["Host de prueba 2\nPuerto acceso VLAN 30 (DevIT)"]
+        R1 ---|"UTP Cat6 - trunk VLAN 10,20,30,31,40,60"| SWF
+        SWF ---|"acceso VLAN 10"| HOST1
+        SWF ---|"acceso VLAN 30"| HOST2
     end
 
     subgraph Virtual["Nube Privada (Proxmox VE - Open Source SDN)"]
@@ -80,9 +82,10 @@ flowchart LR
 - OSPF area 0.0.0.0 en la interfaz hacia VR1 y redistribución de rutas conectadas (VLANs) hacia esa misma área — **sin rutas estáticas**, cumpliendo la restricción.
 - Firewall stateful: reglas DMZ↔LAN↔Internet descritas en [03-Fase3-LAN-WAN-VPN-Seguridad.md](../Fase-3-LAN-WAN-VPN-Seguridad/03-Fase3-LAN-WAN-VPN-Seguridad.md).
 
-### 3.7 Switch físico + host de prueba
-- MikroTik CSS610 con VLANs 802.1Q, un puerto trunk hacia R1, puertos de acceso para el host físico de prueba (y, en producción, hacia los IDFs de piso).
-- El host físico recibe IP por DHCP desde `vm-dhcp` (vía relay), validando el camino completo: Host → Switch físico → R1 → OSPF → VR1 → SV1 → `vm-dhcp`.
+### 3.7 Switch físico + hosts de prueba
+- TP-Link Easy Smart con VLAN 802.1Q, un puerto trunk hacia R1 (transporta las VLANs 10, 20, 30, 31, 40, 60), y al menos 2 puertos de acceso configurados en VLANs distintas — en producción, este mismo patrón se replica hacia los IDFs de piso.
+- **Por qué 2 hosts y no 1**: con un solo host conectado a una sola VLAN solo se demuestra conectividad básica. Con 2 hosts en 2 VLANs distintas (ej. VLAN 10 Administración y VLAN 30 Desarrollo) se demuestra además la segmentación real: cada uno recibe un rango de IP distinto por DHCP, y las reglas de firewall entre VLANs se pueden probar en vivo — es la diferencia entre "el diseño existe en un diagrama" y "el diseño corre en hardware".
+- Cada host recibe IP por DHCP desde `vm-dhcp` (vía relay), validando el camino completo: Host → Switch físico (VLAN correspondiente) → R1 → OSPF → VR1 → SV1 → `vm-dhcp`.
 
 ## 4. Direccionamiento de esta fase
 Ver tabla completa en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md), específicamente las filas `VLAN 80 (Cloud-Mgmt)` y el enlace punto a punto `R1↔VR1`.
@@ -95,10 +98,11 @@ Ver tabla completa en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-Gene
 
 ## 6. Plan de pruebas de conectividad (lo que se demuestra en vivo)
 
-- [ ] `ping` desde el host físico (Data Center) hasta `vm-web` (Nube Privada) — ida.
-- [ ] `ping`/`traceroute` desde `vm-web` o `vr1` hasta el host físico — vuelta.
+- [ ] `ping` desde Host 1 (VLAN 10, Data Center) hasta `vm-web` (Nube Privada) — ida.
+- [ ] `ping`/`traceroute` desde `vm-web` o `vr1` hasta Host 1 y Host 2 — vuelta.
 - [ ] `show ip ospf neighbor` en VyOS y `/routing ospf neighbor print` en RouterOS — adyacencia OSPF activa entre R1 y VR1.
 - [ ] Acceso HTTP al Web Server desde una VLAN de usuario **solo** a través del Proxy (o directo, ya que es el único destino tcp/80 permitido sin proxy) — confirmar que otros destinos tcp/80 externos SON bloqueados sin proxy.
-- [ ] Un cliente en cualquier VLAN recibe IP correcta (gateway, DNS, rango) desde `vm-dhcp` vía relay — probar en al menos 2 VLANs distintas.
+- [ ] Host 1 (VLAN 10) y Host 2 (VLAN 30) reciben cada uno un rango de IP distinto (gateway, DNS) desde `vm-dhcp` vía relay — demuestra segmentación real, no solo diseñada.
+- [ ] Confirmar en el firewall de R1 que Host 1 y Host 2 **no** se pueden alcanzar directamente entre sí (regla inter-VLAN), salvo los puertos de servicio explícitamente permitidos.
 - [ ] Acceso a herramientas de administración (Winbox/SSH a R1, CLI/HTTPS a VyOS, panel de Zabbix) restringido únicamente desde la VLAN de gestión/Soporte I/T.
-- [ ] `traceroute` completo desde un host de VLAN Desarrollo hasta el Web Server, mostrando el salto por R1 → OSPF → VR1 → SV1.
+- [ ] `traceroute` completo desde Host 2 (VLAN 30, Desarrollo) hasta el Web Server, mostrando el salto por el switch (VLAN→trunk) → R1 → OSPF → VR1 → SV1.
