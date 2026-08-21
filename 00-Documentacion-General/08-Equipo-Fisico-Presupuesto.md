@@ -28,18 +28,19 @@ Decisión final: **no hace falta comprar un mini PC dedicado**. El equipo usa la
 | SSD 256–500GB (SATA o NVMe) | Cualquier marca confiable (Kingston, Crucial, WD) | **Q 300 – Q 500** | Es el componente que más impacta el rendimiento con varias VMs corriendo a la vez — más importante que CPU/RAM extra |
 | Case/enclosure USB 3.0 o USB-C para el SSD | Genérico, según tipo de SSD (SATA 2.5" o M.2 NVMe) | **Q 100 – Q 150** | Convierte el SSD en un disco de arranque portátil entre laptops |
 | Adaptador USB-Ethernet (respaldo de conectividad) | Genérico chipset Realtek | **Q 80 – Q 150** | Para asegurar salida de red en la laptop prestada el día de la demo, sin depender del driver de su NIC integrada |
-| **Subtotal "servidor portátil"** | | **≈ Q 480 – Q 800** | Cero costo de mini PC — se reutiliza el hardware que el equipo ya tiene |
+| USB/disco externo para backups (`vzdump`) | 32-64GB USB 3.0, cualquier marca | **Q 80 – Q 150** | Debe ser un disco **distinto** del SSD de arranque — respaldar en el mismo disco que falla no protege de nada |
+| **Subtotal "servidor portátil"** | | **≈ Q 560 – Q 950** | Cero costo de mini PC — se reutiliza el hardware que el equipo ya tiene |
 
 ## 3. Resumen del presupuesto del laboratorio (lo que se necesita para cumplir el proyecto)
 
 | Rubro | Precio aprox. (Q) |
 |---|---|
 | Equipo de red físico (R1 + switch VLAN + cableado) | Q 1,000 – Q 1,090 |
-| SSD externo + enclosure + adaptador USB-Ethernet | Q 480 – Q 800 |
+| SSD externo + enclosure + adaptador USB-Ethernet + disco de backup | Q 560 – Q 950 |
 | Software | Q 0 (100% open source) |
-| **Total laboratorio** | **≈ Q 1,480 – Q 1,890** |
+| **Total laboratorio** | **≈ Q 1,560 – Q 2,040** |
 
-Entre 5 personas ([ver equipo completo](11-Equipo-y-Responsabilidades.md)), esto es **≈ Q 296 – Q 378 por persona** en partes iguales (ya decidido) — sigue siendo mucho más manejable que los ~Q4,000–5,600 que hubiera costado comprando un mini PC nuevo además del equipo de red.
+Entre 5 personas ([ver equipo completo](11-Equipo-y-Responsabilidades.md)), esto es **≈ Q 312 – Q 408 por persona** en partes iguales (ya decidido) — sigue siendo mucho más manejable que los ~Q4,000–5,600 que hubiera costado comprando un mini PC nuevo además del equipo de red.
 
 ## 4. Presupuesto de referencia — rollout de producción real (184 usuarios, 4 pisos)
 

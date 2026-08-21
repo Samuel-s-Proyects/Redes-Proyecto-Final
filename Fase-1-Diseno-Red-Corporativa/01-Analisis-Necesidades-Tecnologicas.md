@@ -39,8 +39,8 @@ Un error común en el diseño de redes es tratar "la empresa" como un solo inter
 
 | # | Necesidad del negocio | Traducción técnica | Prioridad (MoSCoW) |
 |---|---|---|---|
-| 1 | Reducir costo de telefonía | VoIP interno sobre VLAN dedicada con QoS | Must have |
-| 2 | Continuidad de Internet ante falla de proveedor | 2 enlaces WAN, 2 ISP, failover automático | Must have |
+| 1 | Reducir costo de telefonía | VoIP interno con **Asterisk + FreePBX** (VM `vm-voip`), VLAN 60 dedicada con QoS | Must have |
+| 2 | Continuidad de Internet ante falla de proveedor | 2 enlaces WAN de **Claro** y **Tigo** (proveedores con infraestructura independiente entre sí — evita compartir el mismo punto de falla), **failover automático** en R1 (no balanceo: el enunciado pide explícitamente "redundancia", no más ancho de banda agregado) | Must have |
 | 3 | Alta disponibilidad de los sistemas financieros/core | Data Center Tier 4 | Must have |
 | 4 | Confidencialidad y segmentación de datos por área | VLANs + matriz de control de acceso inter-VLAN | Must have |
 | 5 | Habilitar trabajo remoto sin perder control de seguridad | VPN (WireGuard) + intranet colaborativa | Must have |

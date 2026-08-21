@@ -43,9 +43,10 @@ Alternativa más ligera si solo se necesita monitoreo de red (sin servidores): *
 
 ## 4. Zonas desmilitarizadas (DMZ)
 
-- **VLAN 70 (DMZ)**: aloja el Web Server (Fase 4) y, si se opta por publicar el correo directamente, el relay SMTP.
+- **VLAN 70 (DMZ)**: aloja **únicamente el Web Server** (Fase 4). Decisión final: el correo **no** se publica desde la DMZ — `vm-mail` se queda en la VLAN de Servidores (50) y R1 hace NAT/port-forward puntual hacia esos puertos (25/587/993), manteniendo todos los controles de la propia VM (firewall local, fail2ban) sin necesidad de exponer un segundo segmento. Detalle de esa decisión en [Fase2-Servidor-Correo.md](../Fase-2-Servidor-Correo/02-Fase2-Servidor-Correo.md) §3.
 - Reglas de firewall en R1: 
-  - Internet → DMZ: solo puertos publicados explícitamente (80/443 Web, 25/587/993 correo).
+  - Internet → DMZ: solo el puerto publicado del Web Server (80/443).
+  - Internet → `vm-mail` (VLAN Servidores, vía port-forward puntual): solo 25/587/993, nunca acceso abierto al resto de esa VLAN.
   - DMZ → LAN interna: **denegado por defecto** (si el Web Server se compromete, no debe poder pivotar a Administración/Servidores).
   - LAN interna → DMZ: permitido para administración (SSH/HTTPS de gestión) desde la VLAN de Soporte I/T únicamente.
 - Esto es el patrón clásico de 3 zonas (Internet / DMZ / Interna) implementado con ACLs en el mismo Router Core, sin necesitar un firewall dedicado adicional (RouterOS lo soporta bien vía `/ip firewall filter` con chains por VLAN).
@@ -58,21 +59,26 @@ flowchart LR
 
     subgraph DMZ["VLAN 70 — DMZ"]
         WEB["Web Server"]
-        RELAY["Relay de correo (opcional)"]
     end
 
-    subgraph LANINT["VLANs internas\n10/20/30/31/40/50/60"]
-        USERS["Usuarios y Servidores internos"]
+    subgraph LANINT["VLANs internas\n10/20/30/31/40/60"]
+        USERS["Usuarios"]
+    end
+
+    subgraph SRV["VLAN 50 — Servidores"]
+        MAILVM["vm-mail\n(Postfix/Dovecot/rspamd)"]
     end
 
     subgraph SOPORTE["VLAN 40 — Soporte I/T"]
         ADMIN["Administradores de red"]
     end
 
-    INT -->|"80/443 Web, 25/587/993 correo\n(únicos puertos publicados)"| DMZ
+    INT -->|"80/443\n(único puerto publicado hacia DMZ)"| DMZ
+    INT -.->|"25/587/993\nNAT/port-forward puntual, no exposición de VLAN 50"| MAILVM
     DMZ -.->|"DENEGADO por defecto"| LANINT
-    LANINT -->|"puertos de servicio específicos"| DMZ
+    LANINT -->|"puertos de servicio específicos"| SRV
     ADMIN -->|"SSH / HTTPS de gestión"| DMZ
+    ADMIN -->|"SSH / HTTPS de gestión"| SRV
     LANINT -->|"vía Proxy Squid"| INT
 ```
 
@@ -82,10 +88,12 @@ Este diagrama representa exactamente las reglas ya definidas arriba — falta pa
 
 | Componente | Mecanismo de HA |
 |---|---|
-| Internet | 2 ISP + failover automático en R1 |
+| Internet | 2 enlaces (Claro + Tigo) + failover automático en R1 — no balanceo, el enunciado pide redundancia |
 | Enrutamiento Core↔Nube | OSPF (convergencia dinámica ante falla de enlace, no rutas estáticas — cumple restricción explícita del enunciado) |
 | Data Center | Diseño Tier 4 — ver [06-Data-Center-Tier4.md](../Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) (energía y enfriamiento 2N) |
-| Servicios críticos (correo, web) | Backups automatizados de VMs vía Proxmox Backup Server (snapshot + restore rápido); para producción real se recomienda a futuro clúster Proxmox de 3 nodos con Ceph, documentado como roadmap, no como parte obligatoria de esta entrega de laboratorio |
+| Almacenamiento (laboratorio) | 1 solo SSD externo portátil (ver [05-Terraform-Ansible-IaC.md](../00-Documentacion-General/05-Terraform-Ansible-IaC.md) §8) — **sin RAID, punto único de falla reconocido**; en producción real se recomienda Ceph/almacenamiento distribuido (roadmap, no obligatorio para esta entrega) |
+| Respaldo de VMs (laboratorio) | `vzdump` (backup nativo de Proxmox VE, no requiere Proxmox Backup Server dedicado) programado por cron, con destino a un **segundo disco USB distinto del SSD de arranque** — respaldar en el mismo disco que falla no es respaldo real |
+| Cómputo (producción) | 3 hosts de virtualización en clúster HA con Ceph — documentado como diseño de producción en [06-Data-Center-Tier4.md](../Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) §3.1; el laboratorio corre en **1 solo nodo**, sin clúster |
 | Datos | Snapshots diarios automatizados (cron + `vzdump` de Proxmox) hacia disco secundario |
 
 Nota de alcance: para el laboratorio individual con 1 servidor físico, la HA a nivel de hipervisor (clúster multi-nodo) queda como **diseño documentado para producción** (mencionado explícitamente aquí para cumplir el requisito de diseño), mientras que la demo funcional usa el único nodo con backups automatizados como mitigación práctica.

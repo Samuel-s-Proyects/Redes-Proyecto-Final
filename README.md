@@ -139,14 +139,15 @@ No hace falta un "diagramador" único dedicado — cada quien pasa a visual el d
 | Hipervisor / Nube Privada | **Proxmox VE** (en SSD externo portátil) | 100% open source, API completa (Terraform-able), corre bien en laptops de 8-16GB RAM |
 | Switch virtual (SV1) | **Open vSwitch (OVS)** | Estándar de facto para SDN open source, soporta VLAN/trunk |
 | Router virtual (VR1) | **VyOS** | Router Linux open source, soporta OSPF/BGP dinámico, se automatiza con Ansible |
-| Core físico (R1) | **MikroTik RouterOS (hEX RB750Gr3)** | Barato en Guatemala (~Q600), soporta OSPF, VLANs, firewall |
+| Core físico (R1) + Firewall | **MikroTik RouterOS (hEX RB750Gr3)** | Barato en Guatemala (~Q600), soporta OSPF, VLANs, y firewall stateful nativo — **no hay firewall dedicado aparte**, R1 cumple las dos funciones |
 | Switch físico | **TP-Link Easy Smart** (VLAN 802.1Q, 4p PoE) | Barato (~Q318) y permite demostrar segmentación VLAN físicamente, no solo en diagramas |
 | IaC | **Terraform** (provider `bpg/proxmox`) + **Ansible** | Terraform provisiona VMs/red, Ansible configura servicios dentro |
 | Correo | **Postfix + Dovecot + rspamd** | Open source, on-premise, anti-spam integrado |
+| Telefonía IP (VoIP) | **Asterisk + FreePBX** | PBX open source estándar de la industria, VM dedicada `vm-voip` en VLAN 60 |
 | Monitoreo | **Zabbix** | Monitoreo de red + servidores en una sola plataforma open source |
 | Intranet/colaboración | **Nextcloud** | Archivos, calendario, trabajo en equipo remoto |
 | VPN acceso remoto | **WireGuard** | Simple, rápido, open source, ideal para trabajo a distancia |
-| IPAM / documentación de red | **NetBox** | Fuente de verdad de IPs/VLANs, se integra con Terraform |
+| IPAM / documentación de red | **Tabla en [07-Direccionamiento-IP-VLANs.md](00-Documentacion-General/07-Direccionamiento-IP-VLANs.md) + `network-inventory.yaml`** | Fuente de verdad real del proyecto. NetBox se evaluó pero se descartó como servicio corriendo (una VM más que administrar sin necesidad real a esta escala) — queda documentado como mejora de producción, no como parte del stack activo |
 
 ## Próximo paso sugerido
 
