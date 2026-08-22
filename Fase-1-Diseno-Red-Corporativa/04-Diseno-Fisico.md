@@ -4,11 +4,13 @@
 
 | Piso | Área | Usuarios | Puestos de red (2 drops c/u) | Nota de cableado |
 |---|---|---|---|---|
-| 1 | Recepción + **MDF/Data Center** + Ventas | 30 | 60 | El MDF/Data Center vive aquí para minimizar longitud de backbone vertical |
-| 2 | Administración + Soporte I/T | 14 + 12 = 26 | 52 | IDF de piso 2 |
+| 1 | Recepción + Ventas | 30 | 60 | IDF de piso 1 (ya no aloja el MDF — ver justificación abajo) |
+| 2 | **MDF/Data Center** + Administración + Soporte I/T | 14 + 12 = 26 | 52 | El MDF/Data Center vive aquí — ver justificación abajo |
 | 3 | Desarrollo I/T (grupo A) | 55 | 110 | IDF de piso 3 |
 | 4 | Desarrollo I/T (grupo B) + Telefonía IP (gateway/ATA) | 55 + 6 | 110 | IDF de piso 4 |
 | | | **184** | **332** | + margen (ver §6) |
+
+**Por qué el MDF/Data Center está en el Piso 2 y no en el Piso 1**: se descartó deliberadamente la planta baja por riesgo de inundación — es una práctica de sitio estándar en el diseño de Data Centers (Uptime Institute / BICSI 002 desaconsejan planta baja y sótano precisamente por exposición a inundación, además de mayor exposición a acceso vehicular/entregas y menor profundidad de seguridad física). El Piso 2 es el primer nivel elevado del edificio, reduciendo ese riesgo sin llevar el equipo pesado (rack 42U, UPS, futura planta eléctrica) más arriba de lo necesario. Como beneficio adicional, coincide con dónde está **Soporte I/T** — son quienes administran el Data Center día a día, así que tenerlos en el mismo piso reduce el tiempo de respuesta ante cualquier incidente físico (un cambio de patch cord, un reinicio manual, etc.) sin necesidad de subir/bajar pisos.
 
 Desarrollo I/T (110) se divide en 2 IDFs de 55 para no superar la regla práctica de 90–100 m de cableado horizontal por norma **TIA/EIA-568** y para no saturar un solo rack de piso ni concentrar 110 puntos de falla física en un único gabinete.
 
@@ -34,21 +36,23 @@ flowchart TB
         direction LR
         P2A["Administración (14)"]
         P2B["Soporte I/T (12)"]
-        P2IDF["IDF Piso 2\n(rack pared 12U)"]
-        P2A --- P2IDF
-        P2B --- P2IDF
+        P2DC["MDF / Data Center\n(rack 42U, Tier 4)"]
+        P2A --- P2DC
+        P2B --- P2DC
     end
-    subgraph P1["PISO 1"]
+    subgraph P1["PISO 1 (planta baja)"]
         direction LR
         P1A["Recepción + Ventas (30)"]
-        P1DC["MDF / Data Center\n(rack 42U, Tier 4)"]
-        P1A --- P1DC
+        P1IDF["IDF Piso 1\n(rack pared 12U)"]
+        P1A --- P1IDF
     end
 
-    P1DC ===|"Backbone vertical\nFibra OM4 (2 hilos c/u)"| P2IDF
-    P1DC ===|"Backbone vertical\nFibra OM4"| P3IDF
-    P1DC ===|"Backbone vertical\nFibra OM4"| P4IDF
+    P2DC ===|"Backbone vertical\nFibra OM4 (2 hilos c/u)"| P1IDF
+    P2DC ===|"Backbone vertical\nFibra OM4"| P3IDF
+    P2DC ===|"Backbone vertical\nFibra OM4"| P4IDF
 ```
+
+Nota de lectura: el MDF ya no está en planta baja — subió al Piso 2 por prevención de inundación (ver justificación en §1). El backbone hacia el Piso 1 ahora **baja** en vez de solo subir, pero la distancia vertical es la misma (1 entrepiso), así que el presupuesto de atenuación de fibra (§4.1) no cambia.
 
 ## 3. Cuartos de telecomunicaciones (TR) — dimensionamiento conforme TIA-569-D
 
@@ -56,9 +60,11 @@ TIA-569-D exige que todo cuarto de telecomunicaciones (TR/IDF) se dimensione en 
 
 | IDF | Puestos servidos | Área aproximada del piso servida | Dimensión mínima recomendada |
 |---|---|---|---|
-| Piso 2 | 52 drops | ~250–300 m² (estimado) | ≈ 2.0–2.5 m² — rack de pared 12U cabe cómodo |
+| Piso 1 | 60 drops | ~200–250 m² (estimado — Recepción ocupa parte del área sin puestos de red) | ≈ 2.0–2.5 m² — rack de pared 12U cabe cómodo |
 | Piso 3 | 110 drops | ~300–350 m² (estimado, mayor densidad de puestos) | ≈ 2.5–3.0 m² |
 | Piso 4 | 110 drops | ~300–350 m² (estimado) | ≈ 2.5–3.0 m² |
+
+El Piso 2 no aparece en esta tabla como IDF porque ahí ya no hay un cuarto de telecomunicaciones aparte — es directamente el **MDF/Data Center**, dimensionado con los criterios de [06-Data-Center-Tier4.md](06-Data-Center-Tier4.md) (más exigentes que un TR estándar: piso elevado, 2N, extinción, etc.), no con la regla básica de TIA-569-D.
 
 Las áreas de piso son estimadas (no se provee plano arquitectónico en el enunciado) — se confirmarían con el plano real en la ingeniería de detalle, pero el criterio de dimensionamiento (norma, no un número inventado) es lo que importa documentar aquí.
 
@@ -140,9 +146,9 @@ Cada puesto: 2 salidas RJ45 Cat 6 (datos + voz/reserva) en faceplate doble, cert
 | Cableado backbone | Fibra OM4 multimodo, carrete 500 m (cubre 3 corridas × 2 hilos con margen) | 1 carrete |
 | Conectores de puesto | Keystone jack Cat 6 | **405** (1 por drop) |
 | Faceplates | Faceplate doble (2 puertos) | **195** (184 puestos + margen áreas comunes) |
-| Patch panels | 24 puertos Cat 6 — repartidos: 3 en MDF/Piso1 (Ventas), 3 en IDF Piso2, 5 en IDF Piso3, 5 en IDF Piso4 | **16** |
-| Switches de piso | PoE+ 24-48p administrable con VLAN 802.1Q | 3 (Pisos 2, 3, 4) |
-| Switch de distribución | Administrable, VLAN 802.1Q, con capacidad de trunk hacia los 3 IDF | 1 (MDF/Piso 1) |
+| Patch panels | 24 puertos Cat 6 — repartidos: 3 en IDF Piso1 (Ventas), 3 en MDF/Piso2 (Admin+Soporte), 5 en IDF Piso3, 5 en IDF Piso4 | **16** |
+| Switches de piso | PoE+ 24-48p administrable con VLAN 802.1Q | 3 (Pisos 1, 3, 4) |
+| Switch de distribución | Administrable, VLAN 802.1Q, con capacidad de trunk hacia los 3 IDF | 1 (MDF/Piso 2) |
 | Racks IDF | Gabinete de pared 12U | 3 |
 | Rack MDF/Data Center | Gabinete de piso 42U | 1 |
 | UPS de piso | Line-interactive 1000VA | 3 |

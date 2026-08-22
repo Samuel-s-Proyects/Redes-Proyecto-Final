@@ -7,8 +7,8 @@ Se adopta el **modelo jerárquico de 3 capas** (Core / Distribution / Access), e
 | Capa | Función | Elemento en este diseño |
 |---|---|---|
 | **Core** | Enrutamiento de alta velocidad entre todas las VLANs, punto de salida a WAN | R1 (MikroTik RouterOS), Capa 3 |
-| **Distribución** | Agregación de los switches de acceso, frontera de políticas (ACLs, QoS) | Switch de distribución (Data Center, Piso 1) |
-| **Acceso** | Conexión directa del usuario final a la red | 3 switches IDF (Piso 2, 3, 4) |
+| **Distribución** | Agregación de los switches de acceso, frontera de políticas (ACLs, QoS) | Switch de distribución (Data Center, **Piso 2** — no planta baja, ver [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1) |
+| **Acceso** | Conexión directa del usuario final a la red | 3 switches IDF (Piso 1, 3, 4) |
 
 **Por qué 3 capas y no un diseño colapsado (2 capas)**: un diseño colapsado (core+distribución en un solo dispositivo) es apropiado para redes pequeñas de 1 solo piso o edificio sin necesidad de agregación intermedia. Con 184 usuarios repartidos en 4 niveles y necesidad de política de firewall diferenciada por VLAN, separar la función de distribución permite que cada switch de piso solo transporte las VLANs que le corresponden (reduce dominio de broadcast por segmento) sin sobrecargar al Core con la administración de cada puerto de acceso individual.
 
@@ -27,14 +27,16 @@ flowchart TB
     ISP1 --> R1
     ISP2 --> R1
 
-    subgraph P1["Piso 1 - Recepción/Ventas + Data Center (MDF)"]
+    subgraph P2["Piso 2 - Data Center (MDF) + Administración/Soporte"]
         SWDIST["Switch de Distribución\n(uplink directo a R1)"]
-        VL20["VLAN 20 - Ventas (30)"]
+        VL10["VLAN 10 - Administración (14)"]
+        VL40["VLAN 40 - Soporte I/T (12)"]
         VL50["VLAN 50 - Servidores"]
         VL70["VLAN 70 - DMZ"]
         VL80["VLAN 80 - Cloud-Mgmt"]
         VL90["VLAN 90 - Gestión"]
-        SWDIST --- VL20
+        SWDIST --- VL10
+        SWDIST --- VL40
         SWDIST --- VL50
         SWDIST --- VL70
         SWDIST --- VL80
@@ -42,12 +44,10 @@ flowchart TB
     end
     R1 ---|"Trunk: todas las VLANs"| SWDIST
 
-    subgraph P2["Piso 2 - IDF"]
-        SWP2["Switch IDF Piso 2"]
-        VL10["VLAN 10 - Administración (14)"]
-        VL40["VLAN 40 - Soporte I/T (12)"]
-        SWP2 --- VL10
-        SWP2 --- VL40
+    subgraph P1["Piso 1 - IDF (planta baja: Recepción/Ventas)"]
+        SWP1["Switch IDF Piso 1"]
+        VL20["VLAN 20 - Ventas (30)"]
+        SWP1 --- VL20
     end
 
     subgraph P3["Piso 3 - IDF"]
@@ -64,12 +64,12 @@ flowchart TB
         SWP4 --- VL60
     end
 
-    SWDIST ===|"Trunk fibra OM4 - VLANs 10, 40"| SWP2
+    SWDIST ===|"Trunk fibra OM4 - VLAN 20"| SWP1
     SWDIST ===|"Trunk fibra OM4 - VLAN 30"| SWP3
     SWDIST ===|"Trunk fibra OM4 - VLANs 31, 60"| SWP4
 ```
 
-**Cómo leer este diagrama**: la red completa lleva **4 switches físicos** en producción — 1 de distribución en el Data Center (Piso 1, conectado directo a R1) y 3 switches de piso/IDF (Piso 2, 3 y 4), cada uno troncalizado por fibra hacia el de distribución. Cada switch de piso solo transporta las VLANs de las áreas que atiende ese piso. Direccionamiento completo de cada VLAN en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md).
+**Cómo leer este diagrama**: la red completa lleva **4 switches físicos** en producción — 1 de distribución en el Data Center (**Piso 2**, no planta baja, por prevención de inundación, conectado directo a R1) y 3 switches de piso/IDF (Piso 1, 3 y 4), cada uno troncalizado por fibra hacia el de distribución. El switch de distribución también sirve directo a Administración y Soporte I/T (VLANs 10 y 40) por estar físicamente en el mismo piso que ellos — no necesitan un IDF propio. Cada switch de piso restante solo transporta las VLANs de las áreas que atiende ese piso. Direccionamiento completo de cada VLAN en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md).
 
 Nota de alcance: el switch de distribución y los 3 de piso son el **diseño de producción completo** (lo que Virtual Solutions instalaría de verdad); el laboratorio de demo de la Fase 4 usa 1 solo switch físico con 2 puertos de acceso para probar el concepto sin comprar 4 switches — la lógica de VLAN/trunk es idéntica, solo cambia la escala.
 

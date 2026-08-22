@@ -139,7 +139,7 @@ Este conjunto de políticas se inspira en los controles de **ISO/IEC 27001:2022 
 - Detección temprana de humo por aspiración (VESDA o equivalente) antes que un detector puntual convencional — crítico en un cuarto con corriente de aire forzada donde el humo se dispersa rápido.
 
 ### 2.5 Política de gestión de activos físicos
-- Todo equipo de red y servidor se inventaría con: número de serie, ubicación, fecha de compra, garantía, y responsable asignado — mantenido en NetBox (ver [00-Arquitectura-General.md](../00-Documentacion-General/00-Arquitectura-General.md)).
+- Todo equipo de red y servidor se inventaría con: número de serie, ubicación, fecha de compra, garantía, y responsable asignado — mantenido en el inventario de activos del proyecto (hoja de cálculo compartida por ahora; un IPAM/DCIM dedicado como NetBox se evalúa como mejora de producción, no es parte del stack activo del laboratorio — ver [00-Arquitectura-General.md](../00-Documentacion-General/00-Arquitectura-General.md)).
 - Etiquetado físico obligatorio en todo equipo y en ambos extremos de cada cable, siguiendo el esquema de [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §4.5 (norma TIA-606-B).
 - **Disposición segura de medios**: discos duros/SSD dados de baja se destruyen físicamente o se borran con un método de sobrescritura certificado (ej. NIST SP 800-88) antes de salir de las instalaciones — nunca se revenden ni desechan con datos legibles.
 

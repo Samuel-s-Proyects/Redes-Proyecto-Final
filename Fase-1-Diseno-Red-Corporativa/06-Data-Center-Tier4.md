@@ -31,7 +31,8 @@ En términos prácticos: en Tier III, si falla un componente mientras otro está
 
 ## 2. Ubicación y compartimentación
 
-- El Data Center ocupa un espacio dedicado en el **Piso 1**, sin ventanas al exterior, sin tuberías de agua ajenas al propio sistema de extinción/enfriamiento pasando por el cielo o piso del cuarto (requisito común de TIA-942/BICSI 002 para reducir riesgo de daño por agua).
+- El Data Center ocupa un espacio dedicado en el **Piso 2** — deliberadamente **no** en planta baja ni en sótano. Uptime Institute y BICSI 002 desaconsejan ambas ubicaciones para instalaciones críticas: la planta baja está más expuesta a inundación (escorrentía superficial, rotura de tubería municipal, cercanía a la calle) y a mayor tránsito/acceso no controlado (recepción, entregas); el sótano añade el riesgo de nivel freático y drenaje deficiente. El Piso 2 es el primer nivel elevado del edificio — reduce el riesgo de inundación sin llevar equipo pesado (rack 42U, UPS, futura planta eléctrica) más arriba de lo necesario.
+- Sin ventanas al exterior, sin tuberías de agua ajenas al propio sistema de extinción/enfriamiento pasando por el cielo o piso del cuarto (requisito común de TIA-942/BICSI 002 para reducir riesgo de daño por agua).
 - Muros con resistencia al fuego de al menos 1 hora (compartimentación — si hay un incendio en un área adyacente del edificio, el Data Center debe resistir su propagación el tiempo suficiente para actuar).
 - Acceso único controlado (ver §6), sin rutas alternas de entrada no monitoreadas.
 

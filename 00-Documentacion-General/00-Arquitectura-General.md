@@ -46,7 +46,7 @@ flowchart TB
         ISP2[ISP 2 - 10 Mbps]
     end
 
-    subgraph DC["Data Center - Piso 1 (Tier 4)"]
+    subgraph DC["Data Center - Piso 2 (Tier 4)"]
         R1["Router Físico Core R1\nMikroTik RouterOS\nOSPF"]
         SWF["Switch Físico\nTP-Link Easy Smart (VLAN 802.1Q)"]
         HOST["Host físico de prueba\n(laptop/PC)"]
