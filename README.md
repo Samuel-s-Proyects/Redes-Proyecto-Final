@@ -69,6 +69,7 @@ Un documento por cada uno de los 6 puntos que exige el enunciado — índice com
 | 4 | [Diseno-Fisico.md](Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) | Planta, TR/IDF, cableado estructurado, certificación, rack, BOM con memoria de cálculo | **Luis** (continúa en Fase 4 físico) |
 | 5 | [Politicas-Seguridad.md](Fase-1-Diseno-Red-Corporativa/05-Politicas-Seguridad.md) | 15 políticas lógicas + 7 físicas, marco ISO 27001/NIST, RACI de seguridad | **Samuel** (gobernanza/PRs + Fase 2) |
 | 6 | [Data-Center-Tier4.md](Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) | Tier 4 con memoria de cálculo de UPS/HVAC, estándares TIA-942/NFPA/ASHRAE | **Sergio** (su SDN vive ahí, Fase 4) |
+| — | [Arquitectura-Final-Equivalencia-Laboratorio.md](Fase-1-Diseno-Red-Corporativa/07-Arquitectura-Final-Equivalencia-Laboratorio.md) | Complementario: equivalencia dispositivo por dispositivo entre el diseño de producción y el laboratorio de Fase 4 | Todo el equipo |
 
 Detalle de por qué cada punto le tocó a esa persona en [11-Equipo-y-Responsabilidades.md](00-Documentacion-General/11-Equipo-y-Responsabilidades.md) §1.1.
 
@@ -101,7 +102,7 @@ Todos los diagramas de este proyecto ya están diseñados y completos como códi
 | Diagrama | Dónde está el Mermaid ya definido | Responsable de pasarlo a visual |
 |---|---|---|
 | Arquitectura general de la solución | [00-Arquitectura-General.md](00-Documentacion-General/00-Arquitectura-General.md) §2 | Melany |
-| **Diseño lógico — red completa (4 switches: distribución + 3 IDF, VLANs por piso)** | [03-Diseno-Logico.md](Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) §2 | Jeferson |
+| **Diseño lógico — red completa (4 dominios de switching / 12 switches físicos, VLANs por piso)** | [03-Diseno-Logico.md](Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) §2 | Jeferson |
 | Planta por piso (4 niveles) | [04-Diseno-Fisico.md](Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §2 | Luis |
 | Elevación de rack del Data Center | [04-Diseno-Fisico.md](Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §5 (tabla → convertir a rack visual) | Luis |
 | Flujo de correo (intra/inter-dominio + anti-spam) | [Fase2](Fase-2-Servidor-Correo/02-Fase2-Servidor-Correo.md) §2.1 | Samuel |

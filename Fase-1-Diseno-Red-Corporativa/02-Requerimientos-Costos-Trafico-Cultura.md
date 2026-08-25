@@ -77,7 +77,7 @@ Ver desglose línea por línea, con precios reales cotizados en Guatemala, en [0
 | Alcance | Qué incluye | Total aproximado |
 |---|---|---|
 | **Laboratorio de demostración** | 1 router, 1 switch VLAN, cableado mínimo, SSD portátil como servidor | ≈ Q1,480–1,890 |
-| **Rollout de producción real** | Cableado completo para 184 puestos, 4 switches, racks, UPS, teléfonos IP | ≈ Q88,765 (sin UPS central/generador del Data Center) |
+| **Rollout de producción real** | Cableado completo para 166 puestos de trabajo, 12 switches (10 de acceso + 2 de distribución redundante, dimensionados por punto de red real, ver [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.1), 2 routers Core redundantes, racks, UPS, teléfonos IP | ≈ Q186,391 (sin UPS central/generador del Data Center) |
 
 ## 4. Cultura organizacional
 

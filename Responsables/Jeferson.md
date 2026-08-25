@@ -12,7 +12,7 @@ Tenés dos partes, y no es casualidad que estén relacionadas — la Fase 1 Punt
 
 ## Tu punto de Fase 1 (Punto 3 — Diseño Lógico) — es tu entrega más próxima
 
-[03-Diseno-Logico.md](../Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) responde "¿qué switches lleva la red completa y qué VLAN corre por cada uno?" — a diferencia de la demo de laboratorio de la Fase 4 (que usa 1 solo switch con 2 puertos), este es el diseño de **producción completo**: 4 switches (1 de distribución en el Data Center + 3 IDF de piso), con sus enlaces trunk.
+[03-Diseno-Logico.md](../Fase-1-Diseno-Red-Corporativa/03-Diseno-Logico.md) responde "¿qué switches lleva la red completa y qué VLAN corre por cada uno?" — a diferencia de la demo de laboratorio de la Fase 4 (que usa 1 solo switch con 2 puertos), este es el diseño de **producción completo**: 4 dominios de switching (1 de distribución en el Data Center + 3 de piso), que en físico son 12 switches reales por conteo de puertos — 10 de acceso (2 drops por puesto, repartidos 2-2-3-3 por piso) + 2 de distribución en par redundante (cierra un punto único de falla que quedaba documentado como pendiente — detalle y precios reales en doc. 04 §1.1-1.2, de Luis), con sus enlaces trunk.
 
 ### Decisiones clave de este punto y por qué se tomaron
 
@@ -45,7 +45,7 @@ LibreNMS es mejor específicamente para auto-descubrimiento de topología de red
 Patrón clásico de firewall: Internet solo puede tocar la DMZ (Web Server, y el relay de correo si se publica ahí) en los puertos exactos que se publican; la DMZ **nunca** puede iniciar conexión hacia la LAN interna (si comprometen el Web Server, no debe poder pivotar hacia Administración o Servidores); la LAN interna sí puede llegar a la DMZ en los puertos de servicio necesarios. Todo esto se implementa con ACLs en el mismo Router Core (R1), sin necesitar firewall dedicado aparte.
 
 ### 5. Por qué `/24` uniforme para las VLANs (y no VLSM)
-Con 184 dispositivos totales, usar una subred `/24` (254 hosts) por VLAN es simple de justificar y consistente con lo que se ve en el curso (direccionamiento clase C). Se dejó documentado un anexo opcional de VLSM (en el doc 07, al final) para sumar puntos extra si querés mostrar ese dominio — pero no es necesario para que el diseño esté completo y correcto.
+Con 184 dispositivos totales, usar una subred `/24` (254 hosts) por VLAN es simple de justificar. Ojo con un error conceptual común si te preguntan en la defensa: esto **no es "direccionamiento clase C"** — todo `10.0.0.0/8` es Clase A por definición (primer octeto en el rango 1–126), sin importar qué máscara le apliques después; usar `/24` es subnetting **classless** (CIDR), no una propiedad de clase del bloque. La aclaración completa está en el doc 07, al inicio. Se dejó documentado también un anexo opcional de VLSM (en el doc 07, al final) para sumar puntos extra si querés mostrar ese dominio — pero no es necesario para que el diseño esté completo y correcto.
 
 ## Tu tabla de VLANs — la pieza de la que depende todo el equipo
 

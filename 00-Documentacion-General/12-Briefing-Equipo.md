@@ -57,7 +57,7 @@ Tu Fase 4: [04-Fase4-Nube-Privada-SDN.md](../Fase-4-Nube-Privada-SDN/04-Fase4-Nu
 
 Documento completo: [Responsables/Luis.md](../Responsables/Luis.md)
 
-Tu Fase 1: [04-Diseno-Fisico.md](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) — memoria de cálculo real del cableado (405 puntos, 66 cajas, no una estimación al ojo). 2 diagramas tuyos: planta por piso y elevación de rack.
+Tu Fase 1: [04-Diseno-Fisico.md](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) — memoria de cálculo real del cableado (366 puntos, 60 cajas, no una estimación al ojo). 2 diagramas tuyos: planta por piso y elevación de rack.
 
 Tu Fase 4 + presupuesto: [04-Fase4-Nube-Privada-SDN.md](../Fase-4-Nube-Privada-SDN/04-Fase4-Nube-Privada-SDN.md) §3.6-3.7 (Core físico) y [08-Equipo-Fisico-Presupuesto.md](08-Equipo-Fisico-Presupuesto.md) (sos el dueño). **Coordinar la compra del equipo cuanto antes** — router MikroTik, switch TP-Link Easy Smart (VLAN, no el TL-SG105 simple), cable, SSD externo — cobrar la parte de cada quien (~Q296-378 c/u).
 

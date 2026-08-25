@@ -44,27 +44,38 @@ Entre 5 personas ([ver equipo completo](11-Equipo-y-Responsabilidades.md)), esto
 
 ## 4. Presupuesto de referencia — rollout de producción real (184 usuarios, 4 pisos)
 
-Esto **no** es necesario para aprobar el curso, pero el enunciado pide "listado de materiales, características, marcas, modelos y presupuesto" para el diseño físico completo de la Fase 1 — se documenta como el proyecto real que Virtual Solutions ejecutaría después de validar el diseño en el laboratorio. Las cantidades de cableado/conectores/patch panels **no son estimaciones al ojo** — salen de la memoria de cálculo en [04-Diseno-Fisico.md](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §8 (405 drops totales, 45m promedio por corrida, 10% de desperdicio).
+Esto **no** es necesario para aprobar el curso, pero el enunciado pide "listado de materiales, características, marcas, modelos y presupuesto" para el diseño físico completo de la Fase 1 — se documenta como el proyecto real que Virtual Solutions ejecutaría después de validar el diseño en el laboratorio. Las cantidades de cableado/conectores/patch panels **no son estimaciones al ojo** — salen de la memoria de cálculo en [04-Diseno-Fisico.md](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §8 (366 drops totales, sobre 166 puestos de trabajo reales, 45m promedio por corrida, 10% de desperdicio).
 
-| Rubro | Ítem de referencia | Cantidad | Precio unitario aprox. (Q) | Subtotal (Q) |
+Las cantidades de switches **no son "1 por piso" al ojo** — salen del dimensionamiento por puntos de red reales (2 drops por puesto, redondeado a SKU comercial de 48 puertos) en [04-Diseno-Fisico.md](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §1.1, y el Core y la Distribución se implementan en par redundante (§1.1.1) para cerrar el punto único de falla de red que quedaba documentado como pendiente. Los precios de switches y router son **precios reales verificados en vivo** en Pacifiko.com (agosto 2026), no estimaciones de catálogo internacional — ver comparación completa, incluyendo la cotización real Cisco Meraki aportada por el equipo, en [04-Diseno-Fisico.md](../Fase-1-Diseno-Red-Corporativa/04-Diseno-Fisico.md) §1.2.
+
+| Rubro | Ítem de referencia | Cantidad | Precio unitario (Q) | Subtotal (Q) |
 |---|---|---|---|---|
-| Switches de piso PoE+ | MikroTik CRS326-24G-2S+ (o equivalente 48p en pisos grandes) | 3 (pisos 2, 3, 4) | ~Q 2,100 | Q 6,300 |
-| Switch de distribución/core secundario | MikroTik CRS309 o similar con SFP+ | 1 | ~Q 3,300 | Q 3,300 |
-| Router Core de producción (redundante) | 2x MikroTik CCR o RB de gama media | 2 | ~Q 1,500 | Q 3,000 |
-| Cable UTP Cat 6 (caja 305m) | Genérico certificado — **66 cajas** (405 drops × 45m promedio + 10% desperdicio ÷ 305m) | 66 cajas | ~Q 650 | Q 42,900 |
+| Switches de acceso 48p PoE+ | MikroTik CRS354-48P-4S+2Q+RM — 2 Piso1, 2 Piso2, 3 Piso3, 3 Piso4 (ver doc04 §1.1) | 10 | Q 9,444 (real, Pacifiko.com) | Q 94,440 |
+| Switch de distribución (redundante, 2N) | MikroTik CRS326-24S+2Q+RM (MDF/Piso 2, par activo-activo) | 2 | Q 5,714 (real, Pacifiko.com) | Q 11,428 |
+| Router Core de producción (redundante, VRRP) | 2× MikroTik CCR2004-16G-2S+ | 2 | ~Q 4,630 (real, Pacifiko.com, rango Q4,484–4,779) | Q 9,260 |
+| Cable UTP Cat 6 (caja 305m) | Genérico certificado — **60 cajas** (366 drops × 45m promedio + 10% desperdicio ÷ 305m) | 60 cajas | ~Q 650 | Q 39,000 |
 | Fibra óptica OM4 backbone | Carrete 500m (cubre 3 corridas × 2 hilos + margen) | 1 carrete | ~Q 3,500 (cotizar puntual, sin precio GT confirmado) | Q 3,500 |
-| Patch panels 24p Cat 6 | Repartidos: 3 MDF/Ventas, 3 IDF-P2, 5 IDF-P3, 5 IDF-P4 (405 drops ÷ 24p) | 16 | ~Q 350 | Q 5,600 |
-| Keystone jacks Cat 6 | 1 por drop | 405 | ~Q 18 | Q 7,290 |
-| Faceplates dobles | 1 por puesto + margen áreas comunes | 195 | ~Q 25 | Q 4,875 |
+| Patch panels 24p Cat 6 | Repartidos: 3 IDF-P1, 3 MDF-P2, 5 IDF-P3, 5 IDF-P4 (366 drops ÷ 24p) | 16 | ~Q 350 | Q 5,600 |
+| Keystone jacks Cat 6 | 1 por drop | 366 | ~Q 18 | Q 6,588 |
+| Faceplates dobles | 1 por puesto (166) + margen áreas comunes | 183 | ~Q 25 | Q 4,575 |
 | Racks de pared 12U (IDF) | | 3 | ~Q 900 | Q 2,700 |
 | Rack de piso 42U (Data Center) | | 1 | ~Q 4,500 | Q 4,500 |
 | UPS de piso 1000VA | | 3 | ~Q 900 | Q 2,700 |
-| UPS central Data Center 2N (on-line, dimensionado en 06-Data-Center-Tier4.md §3) | 2× ~3kVA (memoria de cálculo en 06-Data-Center-Tier4.md) | 2 | Q 15,000+ c/u | Ver 06-Data-Center-Tier4.md |
-| Teléfonos IP | Grandstream GXP1610 o similar | 6 (piloto) | ~Q 350 | Q 2,100 |
-| Mano de obra de certificación de cableado | Servicio (405 puntos a certificar) | 1 servicio | Variable, cotizar local | — |
-| **Subtotal aproximado (sin UPS central ni generador)** | | | | **≈ Q 88,765** |
+| UPS central Data Center 2N (on-line, dimensionado en 06-Data-Center-Tier4.md §3) | 2× ~6kVA, APC Smart-UPS Rack 6U 208V | 2 | Q 40,113 c/u (real, Kemik.gt) | Ver 06-Data-Center-Tier4.md |
+| Teléfonos IP (repartidos en los 4 pisos, ver doc04 §1.3) | Grandstream GXP1610 o similar | 6 (piloto) | ~Q 350 | Q 2,100 |
+| Mano de obra de certificación de cableado | Servicio (366 puntos a certificar) | 1 servicio | Variable, cotizar local | — |
+| **Subtotal (sin UPS central ni generador del Data Center)** | | | | **≈ Q 186,391** |
 
-El salto respecto a una estimación superficial (que rondaría los Q30,000 si se usan cantidades "al ojo" sin memoria de cálculo) es real: cablear correctamente 405 puntos en un edificio de 4 pisos, certificados, es la parte que más se subestima en un presupuesto de red hecho sin metodología. El detalle de energía/enfriamiento/generador del Data Center Tier 4 (la parte más cara de un rollout real, fuera de este subtotal) está en [06-Data-Center-Tier4.md](../Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) §3-4, con su propia memoria de cálculo de carga IT.
+**Cómo se compara este número con la realidad del mercado — la pregunta que más importa validar**: este subtotal subió de una versión anterior (~Q146,565) a **≈Q186,391** por tres correcciones, todas con causa identificada, no ajustes cosméticos:
+
+1. **Precios reales, no de catálogo sin ajustar** (+~Q30,000 en switches de acceso): el precio anterior de los MikroTik CRS354 venía de una review internacional en USD sin el margen de importación real a Guatemala. El precio verificado en vivo en Pacifiko.com es Q9,444/u, no Q6,400/u.
+2. **Cierre de un punto único de falla en Distribución** (+~Q8,000): se pasó de 1 a 2 switches de distribución (ver doc04 §1.1.1) — un Data Center Tier IV no puede depender de un solo switch de distribución sin importar cuán redundante sea su energía.
+3. **Router Core de gama apropiada para producción** (+~Q6,000): el hEX RB750Gr3 es correcto para el laboratorio de Fase 4 (SOHO, ~Q600), pero un rollout de producción real de 184 usuarios usa un equipo de gama Cloud Core (CCR2004), no el mismo modelo económico del laboratorio.
+   - Parcialmente compensado por la corrección de la memoria de cálculo de cableado (-~Q5,000: 366 drops reales en vez de 405, ver doc04 §8).
+
+**Frente a la cotización real de Cisco Meraki de referencia (Q714,000–760,000, solo switches+router, aportada por el equipo — ver comparación completa en doc04 §1.2)**: la comparación correcta, alcance por alcance (switches de acceso + distribución redundante + router Core redundante, sin mezclar con el cableado), es **Q115,128 (MikroTik) vs. Q714,000–760,000 (Meraki)** — una brecha real de **~6.2× a 6.6×**, no una fracción menor. La diferencia no es un error de cálculo de ningún lado, ni Meraki "incluye más" para justificar el salto — son dos decisiones de marca y de modelo de licenciamiento distintas (desglose completo de las 3 razones verificadas en doc04 §1.2: modelo de licenciamiento en la nube de Meraki, RouterOS como software de nivel profesional real, y consistencia de ecosistema). Ambas cifras están documentadas con fuente real y verificable — se decidió MikroTik después de comparar ambas, no por defecto.
+
+El detalle de energía/enfriamiento/generador del Data Center Tier 4 (la parte más cara de un rollout real, fuera de este subtotal) está en [06-Data-Center-Tier4.md](../Fase-1-Diseno-Red-Corporativa/06-Data-Center-Tier4.md) §3-4, con su propia memoria de cálculo de carga IT y equipo real (APC Smart-UPS, Kemik.gt).
 
 ## 5. Fuentes consultadas
 
@@ -73,4 +84,9 @@ El salto respecto a una estimación superficial (que rondaría los Q30,000 si se
 - [Kemik.gt — TP-Link TL-SG105 (no administrable, descartado por no tener VLAN)](https://www.kemik.gt/tp-link-switch-tl-sg105-5-puertos-101001000mbps)
 - [Kemik.gt — MikroTik CSS610-8G-2S+IN (plan B si no se consigue el Easy Smart)](https://www.kemik.gt/mikrotik-switch-css610-8g-2s-in)
 - [GlobalNetbox — Switch CSS610-8G-2S+IN](https://globalnetbox.net/producto/switch-css610-8g-2sin-mikrotik/)
+- [Pacifiko.com — MikroTik CRS354-48P-4S+2Q+RM, Q9,444 (switch de acceso, producción, verificado en vivo)](https://www.pacifiko.com/compras-en-linea/mikrotik-crs354-48p-4s-2q-rm-switch-has-48-x-1g-rj45-ports-and-4-x-10g-sfp-ports-2-x-40g-qsfp-ports-for-extremely-fast-fiber-connections-or-linking-with-other-40-gbps-devices)
+- [Pacifiko.com — catálogo MikroTik Guatemala (CRS326-24S+2Q+RM Q5,714, CCR2004-16G-2S+ Q4,484-4,779)](https://www.pacifiko.com/mikrotik)
+- [Guatemala Digital — Cisco Business CBS350-48P-4G (descontinuado/sin stock desde 09/2023, verificado en vivo)](https://guatemaladigital.com/Cisco-Business-CBS350-48P-Managed-Switch-48-Port-GE-PoE-4x1G-SFP-Limited-Lifetime-Protection-(CBS350-48P-4G)/Producto/16248335)
 - [Kemik.gt — Switches de 24 puertos Gigabit](https://www.kemik.gt/switches-de-red)
+- [Kemik.gt — APC Smart-UPS 6kVA Rack 6U 208V, Q40,113 (UPS central Data Center)](https://www.kemik.gt/comprar/apc-smart-ups-6kva-en-rack-6u-208v)
+- Cotización Cisco Meraki (MS425-32/MS350-24X/MS120-24P) — GBM Guatemala e IT Solutions Guatemala, aportada por el equipo como referencia real de mercado enterprise.

@@ -1,6 +1,26 @@
 # 07 — Direccionamiento IP y VLANs (fuente de verdad)
 
-Bloque base asignado a toda la empresa: **10.10.0.0/16** (privado, RFC 1918). Se usa `/24` por VLAN de forma uniforme — con 184 endpoints totales hay margen de sobra en cada subred y mantiene el esquema simple de justificar (clase C por VLAN), consistente con lo visto en el curso. Nota de optimización con VLSM al final del documento.
+Bloque base asignado a toda la empresa: **10.10.0.0/16** (privado, RFC 1918). Se usa `/24` por VLAN de forma uniforme — con 184 endpoints totales hay margen de sobra en cada subred. Nota de optimización con VLSM al final del documento.
+
+## Justificación del bloque de direccionamiento y su alcance frente a 184 endpoints
+
+Con solo 184 endpoints, el tamaño del bloque elegido (`10.10.0.0/16`, y más ampliamente el rango privado `10.0.0.0/8` del que se deriva) es deliberadamente mayor de lo que el conteo actual de usuarios necesitaría en una lectura estrictamente literal. Esa holgura es intencional, no un descuido, por tres razones concretas:
+
+1. **Elección del rango privado (`10.0.0.0/8`) sobre las otras dos opciones de RFC 1918**: existen tres bloques privados disponibles — `10.0.0.0/8` (16.7 millones de direcciones), `172.16.0.0/12` (1 millón) y `192.168.0.0/16` (65,536, el rango que casi todo router doméstico/SOHO trae configurado de fábrica). Se descarta `192.168.0.0/16` específicamente porque es el más propenso a colisión: si un empleado se conecta por VPN desde su casa y su propio router también usa `192.168.1.0/24`, el cliente VPN y la red corporativa "compiten" por la misma subred y el enrutamiento falla. `10.0.0.0/8` es, en la práctica, el rango con menor probabilidad de chocar con una red doméstica o de un tercero.
+2. **Espacio privado no es un recurso escaso — a diferencia de IPv4 pública**: reservar más espacio del que se usa hoy no tiene costo, porque nadie más puede "quedarse sin" direcciones privadas por que una organización tome un bloque grande. De los 16.7 millones de direcciones de `10.0.0.0/8`, este proyecto usa activamente 65,536 (`10.10.0.0/16`) y, dentro de ese `/16`, solo una fracción de las 12 subredes `/24` (3,072 direcciones utilizables en total) están realmente asignadas a los 184 endpoints — la relación exacta se muestra en la tabla siguiente.
+3. **Margen de crecimiento sin rediseño**: al quedar prácticamente todo `10.0.0.0/8` libre por fuera del `/16` en uso, la empresa puede crecer (una segunda sede, una nueva VLAN, interconexión con otra oficina) usando el mismo espacio de direccionamiento sin jamás necesitar renumerar lo que ya existe ni invadir el rango `172.16.0.0/12` o `192.168.0.0/16`.
+
+**Visibilidad real del segmento — cuánto se usa vs. cuánto se reservó**:
+
+| Nivel | Direcciones disponibles | Direcciones realmente necesarias (184 endpoints) | % en uso |
+|---|---|---|---|
+| Por VLAN (`/24`, ej. VLAN 20 – Ventas, 30 usuarios) | 254 utilizables | 30 | ≈ 12% |
+| Bloque en uso (`10.10.0.0/16`, 12 VLANs) | 3,072 utilizables (12 × 254) | 184 | ≈ 6% |
+| Rango privado completo (`10.0.0.0/8`) | ~16.7 millones | 184 | < 0.002% |
+
+El margen visible en esta tabla no es sobre-dimensionamiento sin criterio: es el mismo principio que ya se aplica al resto del diseño (capacidad de switches, cableado, direccionamiento) — dejar cabida documentada para crecimiento, sin que eso se confunda con "capacidad ilimitada" que no requiere monitoreo (ver nota de escalabilidad en el Punto 1 del proyecto).
+
+**Aclaración conceptual — por qué esto NO es "direccionamiento clase C"**: todo el bloque `10.0.0.0/8` pertenece, por definición, a la **Clase A** (el primer octeto 10 cae en el rango 1–126 que identifica Clase A) — esto no cambia sin importar qué máscara se le aplique después. El "class-based addressing" (Clases A/B/C/D/E, definido por el primer octeto) fue reemplazado por **CIDR (Classless Inter-Domain Routing, RFC 1518/1519, 1993)** precisamente para eliminar la rigidez de que una organización solo pudiera pedir bloques de tamaño fijo /8, /16 o /24. Que cada VLAN de este proyecto use una máscara `/24` (255.255.255.0) es una decisión de **subnetting classless** — el tamaño de subred se elige por necesidad de hosts, no por la clase original del bloque — no una propiedad "clase C" del espacio de direcciones. Confundir "máscara /24" con "Clase C" es un error conceptual común (la clase describe el bloque original antes de subnetear; la máscara describe cómo se subneteó *después*, algo que las clases nunca contemplaron). En este proyecto: bloque `10.10.0.0/16` = subred de la Clase A privada `10.0.0.0/8` (RFC 1918), subneteada de forma classless en 12 subredes `/24` mediante VLSM/CIDR.
 
 ## Tabla maestra de VLANs
 

@@ -28,16 +28,18 @@ flowchart TB
     ISP2 --> R1
 
     subgraph P2["Piso 2 - Data Center (MDF) + Administración/Soporte"]
-        SWDIST["Switch de Distribución\n(uplink directo a R1)"]
+        SWDIST["Switch de Distribución ×2\n(redundante, uplink directo a R1)"]
         VL10["VLAN 10 - Administración (14)"]
         VL40["VLAN 40 - Soporte I/T (12)"]
         VL50["VLAN 50 - Servidores"]
+        VL60D["VLAN 60 - Tel. IP local (2)"]
         VL70["VLAN 70 - DMZ"]
         VL80["VLAN 80 - Cloud-Mgmt"]
         VL90["VLAN 90 - Gestión"]
         SWDIST --- VL10
         SWDIST --- VL40
         SWDIST --- VL50
+        SWDIST --- VL60D
         SWDIST --- VL70
         SWDIST --- VL80
         SWDIST --- VL90
@@ -47,31 +49,37 @@ flowchart TB
     subgraph P1["Piso 1 - IDF (planta baja: Recepción/Ventas)"]
         SWP1["Switch IDF Piso 1"]
         VL20["VLAN 20 - Ventas (30)"]
+        VL60A["VLAN 60 - Tel. IP (1)"]
         SWP1 --- VL20
+        SWP1 --- VL60A
     end
 
     subgraph P3["Piso 3 - IDF"]
         SWP3["Switch IDF Piso 3"]
         VL30["VLAN 30 - Desarrollo I/T A (55)"]
+        VL60B["VLAN 60 - Tel. IP (1)"]
         SWP3 --- VL30
+        SWP3 --- VL60B
     end
 
     subgraph P4["Piso 4 - IDF"]
         SWP4["Switch IDF Piso 4"]
         VL31["VLAN 31 - Desarrollo I/T B (55)"]
-        VL60["VLAN 60 - Telefonía IP (6)"]
+        VL60C["VLAN 60 - Tel. IP (2)"]
         SWP4 --- VL31
-        SWP4 --- VL60
+        SWP4 --- VL60C
     end
 
-    SWDIST ===|"Trunk fibra OM4 - VLAN 20"| SWP1
-    SWDIST ===|"Trunk fibra OM4 - VLAN 30"| SWP3
+    SWDIST ===|"Trunk fibra OM4 - VLANs 20, 60"| SWP1
+    SWDIST ===|"Trunk fibra OM4 - VLANs 30, 60"| SWP3
     SWDIST ===|"Trunk fibra OM4 - VLANs 31, 60"| SWP4
 ```
 
-**Cómo leer este diagrama**: la red completa lleva **4 switches físicos** en producción — 1 de distribución en el Data Center (**Piso 2**, no planta baja, por prevención de inundación, conectado directo a R1) y 3 switches de piso/IDF (Piso 1, 3 y 4), cada uno troncalizado por fibra hacia el de distribución. El switch de distribución también sirve directo a Administración y Soporte I/T (VLANs 10 y 40) por estar físicamente en el mismo piso que ellos — no necesitan un IDF propio. Cada switch de piso restante solo transporta las VLANs de las áreas que atiende ese piso. Direccionamiento completo de cada VLAN en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md).
+**Cómo leer este diagrama**: la red completa lleva **4 dominios de switching** en producción — 1 de distribución en el Data Center (**Piso 2**, no planta baja, por prevención de inundación, conectado directo a R1, implementado en par redundante — ver [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.1.1) y 3 de piso/IDF (Piso 1, 3 y 4), cada uno troncalizado por fibra hacia el de distribución. El switch de distribución también sirve directo a Administración y Soporte I/T (VLANs 10 y 40) por estar físicamente en el mismo piso que ellos — no necesitan un IDF propio. La **VLAN 60 (Telefonía IP) se troncaliza hacia los 4 pisos**, no solo hacia uno — los 6 teléfonos piloto se reparten donde el negocio los necesita (detalle completo en [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.3), aunque el PBX centralizado vive en el Data Center. Direccionamiento completo de cada VLAN en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md).
 
-Nota de alcance: el switch de distribución y los 3 de piso son el **diseño de producción completo** (lo que Virtual Solutions instalaría de verdad); el laboratorio de demo de la Fase 4 usa 1 solo switch físico con 2 puertos de acceso para probar el concepto sin comprar 4 switches — la lógica de VLAN/trunk es idéntica, solo cambia la escala.
+**Nota sobre "4 switches" vs "12 switches"**: este diagrama muestra 4 **dominios lógicos** de switching (1 por piso) — es la vista de diseño lógico. Físicamente, por conteo real de puntos de red (2 drops por puesto), cada dominio de piso se implementa como un **stack de 2 o 3 unidades** de 48 puertos (2 en Piso 1, 2 en Piso 2, 3 en Piso 3, 3 en Piso 4), y el dominio de distribución se implementa como un **par redundante** de 2 switches (2N, ver [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.1.1) — total **12 switches físicos**, detallados con modelo/precio real en [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.1-1.2. No es una inconsistencia: un stack o un par redundante se administra y aparece ante la red como un solo switch lógico, que es justo lo que representa este diagrama.
+
+Nota de alcance: el diseño de 4 dominios (12 switches físicos: 10 de acceso + 2 de distribución redundante) es el **diseño de producción completo** (lo que Virtual Solutions instalaría de verdad); el laboratorio de demo de la Fase 4 usa 1 solo switch físico con 2 puertos de acceso para probar el concepto sin comprar el equipo completo — la lógica de VLAN/trunk es idéntica, solo cambia la escala (ver equivalencia completa en [07-Arquitectura-Final-Equivalencia-Laboratorio.md](07-Arquitectura-Final-Equivalencia-Laboratorio.md)).
 
 ## 3. Segmentación VLAN — justificación técnica
 
@@ -107,4 +115,4 @@ El marcado se aplica en el punto de entrada más cercano al origen (en R1 para t
 ## 7. Alta disponibilidad de capa 3
 - WAN: 2 ISP con failover automático en R1 (ver [Fase3-LAN-WAN-VPN-Seguridad.md](../Fase-3-LAN-WAN-VPN-Seguridad/03-Fase3-LAN-WAN-VPN-Seguridad.md) §1.2).
 - Core↔Nube Privada: OSPF converge dinámicamente ante falla del enlace R1↔VR1 sin intervención manual.
-- **Punto único de falla reconocido y documentado**: en el diseño actual, tanto R1 como el switch de distribución son dispositivos únicos (no redundantes) — aceptable para el alcance de este proyecto, pero se deja como recomendación de mejora explícita (R1 redundante en HA vía VRRP/CARP, switch de distribución en pila o par redundante, enlaces dobles IDF↔distribución con RSTP del punto 5) para la evolución del diseño en producción. Reconocer un punto único de falla explícitamente es mejor práctica de ingeniería que omitirlo — un diseño que no reconoce sus propias limitaciones no es un diseño confiable.
+- **Punto único de falla — reconocido, y ya cerrado en Core y Distribución**: una revisión anterior de este diseño dejaba tanto a R1 como al switch de distribución como dispositivos únicos, documentados como limitación aceptada. Se corrigió: el **diseño de producción implementa R1 en par redundante (VRRP/CARP)** y **switch de distribución en par redundante** (ver [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.1.1 y §1.2, presupuestado en [08-Equipo-Fisico-Presupuesto.md](../00-Documentacion-General/08-Equipo-Fisico-Presupuesto.md) §4) — es la brecha que un Data Center que se declara conforme a Tier IV no puede dejar abierta, porque una falla de cualquiera de esos dos equipos tumbaría el acceso a los 4 pisos completos sin importar cuán redundante sea la energía. **Queda un punto único de falla reconocido y aceptado por diseño**: cada switch de **acceso** de piso (10 unidades) es individual, no duplicado — decisión deliberada, no un descuido: duplicar cada switch de piso multiplicaría el costo de acceso sin beneficio proporcional, ya que una falla ahí afecta solo a ese piso/zona de cableado durante el tiempo de reemplazo, no a toda la red — es la misma lógica que aplican instalaciones Tier IV certificadas reales, donde la redundancia estricta se exige a las capas que pueden tumbar toda la operación (Core, Distribución, energía, enfriamiento), no a cada punto de acceso individual. Mejora futura documentada: enlaces dobles IDF↔distribución con RSTP/MSTP (punto 5) si en algún momento se justifica duplicar también el acceso.
