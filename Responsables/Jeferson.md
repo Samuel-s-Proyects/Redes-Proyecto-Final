@@ -44,8 +44,10 @@ LibreNMS es mejor específicamente para auto-descubrimiento de topología de red
 ### 4. Por qué las 3 zonas (Internet / DMZ / Interna) y esas reglas específicas
 Patrón clásico de firewall: Internet solo puede tocar la DMZ (Web Server, y el relay de correo si se publica ahí) en los puertos exactos que se publican; la DMZ **nunca** puede iniciar conexión hacia la LAN interna (si comprometen el Web Server, no debe poder pivotar hacia Administración o Servidores); la LAN interna sí puede llegar a la DMZ en los puertos de servicio necesarios. Todo esto se implementa con ACLs en el mismo Router Core (R1), sin necesitar firewall dedicado aparte.
 
-### 5. Por qué `/24` uniforme para las VLANs (y no VLSM)
-Con 184 dispositivos totales, usar una subred `/24` (254 hosts) por VLAN es simple de justificar. Ojo con un error conceptual común si te preguntan en la defensa: esto **no es "direccionamiento clase C"** — todo `10.0.0.0/8` es Clase A por definición (primer octeto en el rango 1–126), sin importar qué máscara le apliques después; usar `/24` es subnetting **classless** (CIDR), no una propiedad de clase del bloque. La aclaración completa está en el doc 07, al inicio. Se dejó documentado también un anexo opcional de VLSM (en el doc 07, al final) para sumar puntos extra si querés mostrar ese dominio — pero no es necesario para que el diseño esté completo y correcto.
+### 5. Por qué VLSM real (máscara distinta por VLAN) y bloque base tamaño Clase B
+Cada VLAN usa la máscara más ajustada a su necesidad real de hosts (calculada como el bloque de potencia de 2 más pequeño que alcanza, restando red+broadcast+gateway) — no un `/24` parejo para las 12. Por ejemplo, Soporte I/T (12 personas) usa un bloque de 16 direcciones (`/28`), mientras que Desarrollo I/T (55 personas) usa uno de 64 (`/26`).
+
+El bloque base es tamaño Clase B (`172.20.0.0/16`), no Clase C, porque la **suma** de los 12 bloques VLSM (≈348 direcciones) no cabe en un solo bloque de 256 direcciones (tamaño Clase C) — hay que fijarse en el total a alojar simultáneamente, no en el tamaño de cada VLAN por separado. Ojo con un error conceptual relacionado si te preguntan en la defensa: desde CIDR, la "clase" de un bloque ya no impone ninguna regla real sobre qué máscara podés aplicarle — hablar de "necesitar un bloque tamaño Clase B" es una forma abreviada de decir "necesito reservar 65,536 direcciones", no una regla técnica obligatoria. La aclaración completa, con la memoria de cálculo VLAN por VLAN, está en el doc 07.
 
 ## Tu tabla de VLANs — la pieza de la que depende todo el equipo
 

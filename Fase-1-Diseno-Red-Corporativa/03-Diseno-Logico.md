@@ -108,9 +108,9 @@ El marcado se aplica en el punto de entrada más cercano al origen (en R1 para t
 
 ## 6. Direccionamiento IP y cumplimiento normativo
 
-- Todo el direccionamiento usa espacio privado **RFC 1918** (`10.10.0.0/16`), NAT en R1 hacia las 2 salidas de Internet.
+- Todo el direccionamiento usa espacio privado **RFC 1918** (`172.20.0.0/16`), NAT en R1 hacia las 2 salidas de Internet.
 - Segmentación por VLAN conforme **IEEE 802.1Q** (trunking estándar, no propietario — portable entre fabricantes, relevante porque el diseño mezcla MikroTik con el switch Easy Smart de otra marca).
-- Ver tabla maestra completa de VLANs, subredes, gateways y rangos DHCP en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md), incluyendo la nota de optimización con VLSM para quien quiera profundizar más allá del esquema `/24` uniforme elegido como base — la elección de `/24` uniforme (en vez de VLSM ajustado a cada VLAN) es deliberada: prioriza simplicidad operativa y margen de crecimiento (§1.4 de [01-Analisis-Necesidades-Tecnologicas.md](01-Analisis-Necesidades-Tecnologicas.md)) sobre eficiencia de espacio de direcciones, que no es un recurso escaso en un bloque privado `/16`.
+- Ver tabla maestra completa de VLANs, subredes, gateways y rangos DHCP en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md). Cada VLAN usa una máscara **VLSM ajustada a su necesidad real de hosts** (no un `/24` parejo) — la suma de los bloques VLSM de las 12 VLANs supera los 256 direcciones que caben en un solo bloque tamaño Clase C, lo que determina que el bloque base deba ser de tamaño Clase B (`/16`); el detalle completo de esa memoria de cálculo, VLAN por VLAN, está en el documento 07.
 
 ## 7. Alta disponibilidad de capa 3
 - WAN: 2 ISP con failover automático en R1 (ver [Fase3-LAN-WAN-VPN-Seguridad.md](../Fase-3-LAN-WAN-VPN-Seguridad/03-Fase3-LAN-WAN-VPN-Seguridad.md) §1.2).

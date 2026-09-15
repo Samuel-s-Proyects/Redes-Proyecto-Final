@@ -24,7 +24,7 @@ Separar estas dos categorías es una práctica estándar de ingeniería de reque
 | Latencia WAN (a Internet) | < 80 ms promedio hacia destinos regionales | Monitoreo continuo |
 | RPO (pérdida de datos máxima tolerable) | 24 h (servicios generales), 1 h (correo) | Ver política de respaldo, [05-Politicas-Seguridad.md](05-Politicas-Seguridad.md) §1.9 |
 | RTO (tiempo de recuperación máximo) | 4 h para cualquier servicio crítico | Prueba trimestral de restauración |
-| Capacidad de crecimiento sin rediseño | Hasta 4x la planta actual por VLAN | Direccionamiento `/24`, ver [03-Diseno-Logico.md](03-Diseno-Logico.md) |
+| Capacidad de crecimiento sin rediseño | Hasta 4x la planta actual por VLAN | Direccionamiento VLSM con margen documentado por subred, ver [03-Diseno-Logico.md](03-Diseno-Logico.md) |
 | Tiempo de detección de incidentes | < 5 minutos desde que ocurre la falla | Alertas automáticas Zabbix |
 
 ## 2. Análisis de tráfico de red

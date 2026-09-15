@@ -54,45 +54,45 @@ company: "Virtual Solutions"
 vlans:
   - id: 10
     name: admin
-    subnet: 10.10.10.0/24
-    gateway: 10.10.10.1
-    dhcp_range: [10.10.10.100, 10.10.10.200]
+    subnet: 172.20.0.192/27
+    gateway: 172.20.0.193
+    dhcp_range: [172.20.0.199, 172.20.0.222]
     users: 14
   - id: 20
     name: ventas
-    subnet: 10.10.20.0/24
-    gateway: 10.10.20.1
-    dhcp_range: [10.10.20.100, 10.10.20.200]
+    subnet: 172.20.0.0/26
+    gateway: 172.20.0.1
+    dhcp_range: [172.20.0.11, 172.20.0.62]
     users: 30
   - id: 70
     name: dmz
-    subnet: 10.10.70.0/24
-    gateway: 10.10.70.1
+    subnet: 172.20.1.96/29
+    gateway: 172.20.1.97
     dhcp_range: null   # IPs estáticas
   - id: 80
     name: cloud-mgmt
-    subnet: 10.10.80.0/24
-    gateway: 10.10.80.1
+    subnet: 172.20.1.104/29
+    gateway: 172.20.1.105
 
 vms:
   - name: vm-web
     role: webserver
     vlan: dmz
-    ip: 10.10.70.10
+    ip: 172.20.1.98
     vcpu: 1
     ram_mb: 1024
     disk_gb: 8
   - name: vm-dhcp
     role: dhcp
     vlan: servers
-    ip: 10.10.50.10
+    ip: 172.20.1.2
     vcpu: 1
     ram_mb: 1024
     disk_gb: 8
   - name: vm-proxy
     role: proxy
     vlan: servers
-    ip: 10.10.50.11
+    ip: 172.20.1.3
     vcpu: 2
     ram_mb: 2048
     disk_gb: 16
@@ -105,7 +105,7 @@ sdn:
     routing_protocol: ospf
     ospf_area: 0.0.0.0
     link_to_core:
-      subnet: 10.10.254.0/30
+      subnet: 172.20.1.120/30
       cable: "UTP Cat6"
 
 core_router:
@@ -198,7 +198,7 @@ Esto reemplaza por completo el proceso manual de "crear VM en la consola de Prox
 subnet {{ vlan.subnet | ansible.utils.ipaddr('network') }} netmask {{ vlan.subnet | ansible.utils.ipaddr('netmask') }} {
   range {{ vlan.dhcp_range[0] }} {{ vlan.dhcp_range[1] }};
   option routers {{ vlan.gateway }};
-  option domain-name-servers 10.10.50.10, 1.1.1.1;
+  option domain-name-servers 172.20.1.2, 1.1.1.1;
 }
 {% endfor %}
 ```

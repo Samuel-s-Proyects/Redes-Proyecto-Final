@@ -14,9 +14,9 @@ Ver [00-Arquitectura-General.md](../00-Documentacion-General/00-Arquitectura-Gen
 Acceso controlado y limitado para terceros (ej. un proveedor o cliente externo que necesita consultar un aplicativo puntual): se resuelve publicando **únicamente** el servicio necesario a través de la DMZ (VLAN 70), nunca dando acceso directo a la LAN interna. Si se requiere acceso más amplio para un socio, se emite un perfil VPN WireGuard restringido por firewall a solo los recursos autorizados (no acceso total a la red).
 
 ### 1.4 VPN de acceso remoto
-- **WireGuard** sobre UDP, corriendo en una VM (`vm-vpn`) o directamente en R1 (RouterOS ≥7 trae WireGuard nativo — reduce un salto y una VM).
+- **WireGuard** sobre UDP 51820, corriendo en `vm-vpn` (imagen `linuxserver/wireguard`, que autogenera perfiles de cliente `.conf` + QR sin manejo manual de llaves).
 - Cada empleado remoto recibe un perfil con IP fija dentro del pool `VLAN 200` (ver documento 07), permitiéndole llegar a Intranet (Nextcloud), correo interno y, si su rol lo requiere, a su VLAN de origen vía ACL puntual.
-- Se prefiere WireGuard sobre OpenVPN por: configuración más simple (menos superficie de error), mejor rendimiento (menor overhead, corre en el espacio de kernel), y auditoría de código más pequeña (más fácil de confiar). Se documenta OpenVPN como alternativa clásica por si el catedrático lo pide explícitamente.
+- Se prefiere WireGuard sobre OpenVPN por: configuración más simple (menos superficie de error), mejor rendimiento (corre en espacio de kernel, no en espacio de usuario), criptografía moderna fija sin negociación (Curve25519 para intercambio de llaves, ChaCha20-Poly1305 para cifrado autenticado, BLAKE2s para hashing — sin downgrade posible a una suite débil), y una base de código de solo ~4,000 líneas (auditable en días, no semanas, frente a las cientas de miles de líneas de OpenVPN). Se documenta OpenVPN como alternativa clásica por si el catedrático lo pide explícitamente, o si se requiere compatibilidad con clientes legados.
 
 ### 1.5 Intranet
 Software sugerido: **Nextcloud** (VM `vm-intranet`, VLAN Servidores).
@@ -109,3 +109,17 @@ Los 3 servicios de esta fase ya están escritos como roles de Ansible en [`infra
 | Monitoreo | `monitoring/` + `zabbix_agent/` | Zabbix server+web+PostgreSQL, más un rol de agente liviano que se aplica a todas las VMs del proyecto |
 
 Script de verificación: `infra/scripts/test-fase3-services.sh <ip_intranet> <ip_monitor> <ip_vpn>` — confirma que Nextcloud y Zabbix respondan por HTTP y que WireGuard tenga peers activos. Pasos completos de despliegue en [infra/README.md](../../infra/README.md).
+
+## 7. Seguridad de la Fase 3
+
+Aplica el marco de políticas de [05-Politicas-Seguridad.md](../Fase-1-Diseno-Red-Corporativa/05-Politicas-Seguridad.md) específicamente a los 3 servicios de esta fase — no repite esas políticas generales, muestra cómo se materializan aquí.
+
+**Cifrado y superficie expuesta**: de los 3 servicios (VPN, Intranet, Monitoreo), solo el puerto UDP 51820 de WireGuard queda expuesto a Internet. Nextcloud (8081) y Zabbix (8082) son accesibles únicamente desde la LAN interna o vía VPN — nunca publicados directamente. El único otro servicio expuesto a Internet en todo el proyecto es el Web Server en la DMZ (§4), con su propia regla de firewall aislada.
+
+**Gestión de secretos**: ninguna contraseña vive en texto plano en el código de automatización — `intranet_db_root_password`, `intranet_db_password`, `intranet_admin_password` y `monitoring_db_password` se referencian desde `group_vars/all.yml` pero se resuelven contra `group_vars/vault.yml` (cifrado con Ansible Vault, no versionado en claro). WireGuard no necesita este mecanismo: el propio contenedor genera sus llaves criptográficas al arrancar.
+
+**Por qué VPN/Intranet/Monitoreo NO van en la DMZ**: el criterio de qué va en la DMZ no es "recibe tráfico externo" (la VPN sí lo recibe, en su puerto UDP), es "expone un servicio completo de forma pública y no autenticada" — solo el Web Server cumple eso. Meter la VPN o Nextcloud a la DMZ "porque hablan con el exterior" sería un error de diseño: diluiría el propósito de la DMZ, que es contener el daño si un servicio público sin autenticación previa se compromete.
+
+**Monitoreo como control de seguridad, no solo de disponibilidad**: Zabbix (rol `monitoring` + `zabbix_agent`) es también el mecanismo de detección temprana de eventos relevantes de seguridad — intentos fallidos repetidos contra la VPN, caída inesperada del Web Server en la DMZ, desviación sostenida del tráfico normal en los enlaces WAN. Estas señales alimentan el proceso de respuesta a incidentes ya definido en la política de seguridad de Fase 1 (§1.11).
+
+**Hardening base**: el rol `common` (Docker + `chrony` + zona horaria) se aplica antes que cualquier rol de servicio en las 3 VMs de esta fase — sincronización horaria activa es crítica para que los timestamps de auditoría y la validación de sesiones cifradas sean confiables entre servicios.

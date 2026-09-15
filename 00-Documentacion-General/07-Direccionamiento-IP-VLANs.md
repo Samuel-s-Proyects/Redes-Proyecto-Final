@@ -1,83 +1,107 @@
 # 07 — Direccionamiento IP y VLANs (fuente de verdad)
 
-Bloque base asignado a toda la empresa: **10.10.0.0/16** (privado, RFC 1918). Se usa `/24` por VLAN de forma uniforme — con 184 endpoints totales hay margen de sobra en cada subred. Nota de optimización con VLSM al final del documento.
+Bloque base asignado a toda la empresa: **172.20.0.0/16** (privado, RFC 1918, rango 172.16.0.0/12). Cada una de las 12 VLANs y el enlace punto a punto usan una máscara **VLSM ajustada a su necesidad real de hosts** — no un `/24` uniforme — siguiendo la memoria de cálculo de esta sección.
 
-## Justificación del bloque de direccionamiento y su alcance frente a 184 endpoints
+## 1. Por qué un bloque tamaño Clase B, y por qué VLSM (no `/24` uniforme)
 
-Con solo 184 endpoints, el tamaño del bloque elegido (`10.10.0.0/16`, y más ampliamente el rango privado `10.0.0.0/8` del que se deriva) es deliberadamente mayor de lo que el conteo actual de usuarios necesitaría en una lectura estrictamente literal. Esa holgura es intencional, no un descuido, por tres razones concretas:
+### 1.1 Metodología de dimensionamiento
 
-1. **Elección del rango privado (`10.0.0.0/8`) sobre las otras dos opciones de RFC 1918**: existen tres bloques privados disponibles — `10.0.0.0/8` (16.7 millones de direcciones), `172.16.0.0/12` (1 millón) y `192.168.0.0/16` (65,536, el rango que casi todo router doméstico/SOHO trae configurado de fábrica). Se descarta `192.168.0.0/16` específicamente porque es el más propenso a colisión: si un empleado se conecta por VPN desde su casa y su propio router también usa `192.168.1.0/24`, el cliente VPN y la red corporativa "compiten" por la misma subred y el enrutamiento falla. `10.0.0.0/8` es, en la práctica, el rango con menor probabilidad de chocar con una red doméstica o de un tercero.
-2. **Espacio privado no es un recurso escaso — a diferencia de IPv4 pública**: reservar más espacio del que se usa hoy no tiene costo, porque nadie más puede "quedarse sin" direcciones privadas por que una organización tome un bloque grande. De los 16.7 millones de direcciones de `10.0.0.0/8`, este proyecto usa activamente 65,536 (`10.10.0.0/16`) y, dentro de ese `/16`, solo una fracción de las 12 subredes `/24` (3,072 direcciones utilizables en total) están realmente asignadas a los 184 endpoints — la relación exacta se muestra en la tabla siguiente.
-3. **Margen de crecimiento sin rediseño**: al quedar prácticamente todo `10.0.0.0/8` libre por fuera del `/16` en uso, la empresa puede crecer (una segunda sede, una nueva VLAN, interconexión con otra oficina) usando el mismo espacio de direccionamiento sin jamás necesitar renumerar lo que ya existe ni invadir el rango `172.16.0.0/12` o `192.168.0.0/16`.
+Para cada VLAN, el tamaño de subred se calcula así, sin dejar margen adicional más allá de lo que exige el redondeo a una potencia de 2:
 
-**Visibilidad real del segmento — cuánto se usa vs. cuánto se reservó**:
+1. **Host necesarios** = conteo real (personas o dispositivos), sin inflar el número.
+2. **Bits de host** = el menor `n` tal que `2ⁿ − 3 ≥ Host necesarios`.
+3. **Bloque** = `2ⁿ` direcciones. **Prefijo** = `32 − n`.
+4. **Disponibles** = `Bloque − 3` — se restan **red, broadcast y gateway** (no solo red y broadcast), porque en este diseño cada subred de usuarios necesita su propio gateway dedicado.
 
-| Nivel | Direcciones disponibles | Direcciones realmente necesarias (184 endpoints) | % en uso |
-|---|---|---|---|
-| Por VLAN (`/24`, ej. VLAN 20 – Ventas, 30 usuarios) | 254 utilizables | 30 | ≈ 12% |
-| Bloque en uso (`10.10.0.0/16`, 12 VLANs) | 3,072 utilizables (12 × 254) | 184 | ≈ 6% |
-| Rango privado completo (`10.0.0.0/8`) | ~16.7 millones | 184 | < 0.002% |
+**Excepción del enlace punto a punto** (Core ↔ Router Virtual): un enlace de 2 puntos no tiene un "gateway" separado de sus propios extremos, así que ahí se aplica la convención estándar de solo `−2` (red + broadcast), no `−3` — se mantiene `/30`, 2 direcciones utilizables, una por router.
 
-El margen visible en esta tabla no es sobre-dimensionamiento sin criterio: es el mismo principio que ya se aplica al resto del diseño (capacidad de switches, cableado, direccionamiento) — dejar cabida documentada para crecimiento, sin que eso se confunda con "capacidad ilimitada" que no requiere monitoreo (ver nota de escalabilidad en el Punto 1 del proyecto).
+### 1.2 Por qué el bloque base es tamaño Clase B y no Clase C
 
-**Aclaración conceptual — por qué esto NO es "direccionamiento clase C"**: todo el bloque `10.0.0.0/8` pertenece, por definición, a la **Clase A** (el primer octeto 10 cae en el rango 1–126 que identifica Clase A) — esto no cambia sin importar qué máscara se le aplique después. El "class-based addressing" (Clases A/B/C/D/E, definido por el primer octeto) fue reemplazado por **CIDR (Classless Inter-Domain Routing, RFC 1518/1519, 1993)** precisamente para eliminar la rigidez de que una organización solo pudiera pedir bloques de tamaño fijo /8, /16 o /24. Que cada VLAN de este proyecto use una máscara `/24` (255.255.255.0) es una decisión de **subnetting classless** — el tamaño de subred se elige por necesidad de hosts, no por la clase original del bloque — no una propiedad "clase C" del espacio de direcciones. Confundir "máscara /24" con "Clase C" es un error conceptual común (la clase describe el bloque original antes de subnetear; la máscara describe cómo se subneteó *después*, algo que las clases nunca contemplaron). En este proyecto: bloque `10.10.0.0/16` = subred de la Clase A privada `10.0.0.0/8` (RFC 1918), subneteada de forma classless en 12 subredes `/24` mediante VLSM/CIDR.
+Un error común es pensar que basta con mirar el tamaño de **cada VLAN por separado** para decidir la clase del bloque base. El criterio correcto es la **suma de todos los bloques VLSM que hay que alojar simultáneamente, sin que se traslapen**:
 
-## Tabla maestra de VLANs
+| VLAN / enlace | Bloque asignado |
+|---|---|
+| Ventas, Desarrollo I/T A, Desarrollo I/T B | 64 + 64 + 64 |
+| Administración, Servidores, Gestión | 32 + 32 + 32 |
+| Soporte I/T, Telefonía IP | 16 + 16 |
+| DMZ, Cloud-Mgmt, VPN-pool | 8 + 8 + 8 |
+| Enlace Core ↔ Router Virtual | 4 |
+| **Suma total** | **348 direcciones** |
 
-| VLAN | Nombre | Área / Función | Dispositivos aprox. | Subred | Gateway | Rango DHCP | Rango estático |
-|---|---|---|---|---|---|---|---|
-| 10 | VLAN10-ADMIN | Administración | 14 | 10.10.10.0/24 | 10.10.10.1 | .100–.200 | .2–.99 |
-| 20 | VLAN20-VENTAS | Ventas | 30 | 10.10.20.0/24 | 10.10.20.1 | .100–.200 | .2–.99 |
-| 30 | VLAN30-DEVIT-A | Desarrollo I/T (Piso 3) | 55 | 10.10.30.0/24 | 10.10.30.1 | .100–.220 | .2–.99 |
-| 31 | VLAN31-DEVIT-B | Desarrollo I/T (Piso 4) | 55 | 10.10.31.0/24 | 10.10.31.1 | .100–.220 | .2–.99 |
-| 40 | VLAN40-SOPORTE | Soporte I/T | 12 | 10.10.40.0/24 | 10.10.40.1 | .100–.200 | .2–.99 |
-| 50 | VLAN50-SERVERS | Servidores internos (correo, monitor, intranet, VPN, DHCP, proxy) | 12 físicos + VMs de servicio | 10.10.50.0/24 | 10.10.50.1 | — (todo estático) | .10–.199 |
-| 60 | VLAN60-VOIP | Telefonía IP | 6 (crecimiento previsto) | 10.10.60.0/24 | 10.10.60.1 | .100–.200 (DHCP option 66/150 para provisioning) | .2–.99 |
-| 70 | VLAN70-DMZ | Web Server (y correo si se publica directo) | — | 10.10.70.0/24 | 10.10.70.1 | — (todo estático) | .10–.50 |
-| 80 | VLAN80-CLOUD-MGMT | Nube Privada — VMs internas + gestión SV1 | — | 10.10.80.0/24 | 10.10.80.1 (VR1) | — (todo estático) | .10–.50 |
-| 90 | VLAN90-MGMT | Gestión de equipos de red (SNMP/SSH/Winbox/HTTPS) | — | 10.10.90.0/24 | 10.10.90.1 | — | .2–.50 |
-| 200 | VLAN200-VPN | Pool de clientes VPN remotos (WireGuard) | dinámico | 10.10.200.0/24 | 10.10.200.1 | Asignado por WireGuard (no DHCP) | — |
+348 direcciones **no caben** dentro de un solo bloque de 256 direcciones (el tamaño de un bloque tipo Clase C, `/24`) — por lo tanto, siguiendo el mismo criterio que determina cuándo escalar de un rango tipo Clase C a uno tipo Clase B, este proyecto necesita un bloque base de al menos tamaño `/16` (65,536 direcciones, tamaño Clase B). `172.20.0.0/16` cumple esto con amplio margen (utilización real ≈ 0.5%), dejando espacio documentado para crecimiento sin tener que renumerar nada — el mismo principio que ya se aplica al resto del diseño (capacidad de switches, cableado).
 
-## Enlace punto a punto Core ↔ Nube Privada
+### 1.3 Aclaración conceptual — qué significa realmente "Clase B" aquí
+
+Técnicamente, desde que existe **CIDR (Classless Inter-Domain Routing, RFC 1518/1519, 1993)**, la "clase" de un bloque (A/B/C, definida antes por el primer octeto) ya no impone ninguna regla real sobre qué máscara se le puede aplicar — es perfectamente válido subnetear un bloque Clase A en piezas de tamaño /29, o un bloque Clase C en una sola subred de /24. Lo que hace este proyecto al hablar de "necesitar un bloque tamaño Clase B" es usar la nomenclatura de tamaño de bloque (256 = tamaño de un bloque Clase C, 65,536 = tamaño de un bloque Clase B) como una forma abreviada y estándar en la industria de referirse a "cuánto espacio de direcciones necesito reservar", no como una regla que obligue a elegir literalmente un rango que alguna vez perteneció a esa clase. `172.20.0.0/16` es, en términos estrictos de RFC 1918, parte del rango privado `172.16.0.0/12` (que agrupa los bloques que clásicamente se llamaban Clase B) — el nombre coincide con el tamaño de bloque que realmente se necesita, lo cual es intencional y no una coincidencia.
+
+## 2. Tabla maestra de VLANs — máscaras VLSM ajustadas
+
+| VLAN | Nombre | Área / Función | Host reales | Bloque | Prefijo | Subred | Gateway | Rango usable | Broadcast | Disponibles |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 10 | VLAN10-ADMIN | Administración | 14 | 32 | /27 | 172.20.0.192/27 | 172.20.0.193 | .194–.222 | 172.20.0.223 | 29 |
+| 20 | VLAN20-VENTAS | Ventas | 30 | 64 | /26 | 172.20.0.0/26 | 172.20.0.1 | .2–.62 | 172.20.0.63 | 61 |
+| 30 | VLAN30-DEVIT-A | Desarrollo I/T (Piso 3) | 55 | 64 | /26 | 172.20.0.64/26 | 172.20.0.65 | .66–.126 | 172.20.0.127 | 61 |
+| 31 | VLAN31-DEVIT-B | Desarrollo I/T (Piso 4) | 55 | 64 | /26 | 172.20.0.128/26 | 172.20.0.129 | .130–.190 | 172.20.0.191 | 61 |
+| 40 | VLAN40-SOPORTE | Soporte I/T | 12 | 16 | /28 | 172.20.1.64/28 | 172.20.1.65 | .66–.78 | 172.20.1.79 | 13 |
+| 50 | VLAN50-SERVERS | Servidores internos (8 VMs de servicio + hosts físicos) | 20 | 32 | /27 | 172.20.1.0/27 | 172.20.1.1 | .2–.30 | 172.20.1.31 | 29 |
+| 60 | VLAN60-VOIP | Telefonía IP | 6 | 16 | /28 | 172.20.1.80/28 | 172.20.1.81 | .82–.94 | 172.20.1.95 | 13 |
+| 70 | VLAN70-DMZ | Servidor Web (y correo si se publica directo) | 2 | 8 | /29 | 172.20.1.96/29 | 172.20.1.97 | .98–.102 | 172.20.1.103 | 5 |
+| 80 | VLAN80-CLOUD-MGMT | Nube Privada — VR1 + SV1 | 2 | 8 | /29 | 172.20.1.104/29 | 172.20.1.105 (VR1) | .106–.110 | 172.20.1.111 | 5 |
+| 90 | VLAN90-MGMT | Gestión de equipos de red (12 acceso + 2 distribución + 2 routers Core) | 16 | 32 | /27 | 172.20.1.32/27 | 172.20.1.33 | .34–.62 | 172.20.1.63 | 29 |
+| 200 | VLAN200-VPN | Pool de clientes VPN remotos (WireGuard, 5 perfiles piloto) | 5 | 8 | /29 | 172.20.1.112/29 | 172.20.1.113 | .114–.118 | 172.20.1.119 | 5 |
+
+**Rangos DHCP / estático por VLAN**:
+
+| VLAN | Rango estático | Rango DHCP |
+|---|---|---|
+| 10 Admin | .194–.198 | .199–.222 |
+| 20 Ventas | .2–.10 | .11–.62 |
+| 30 DevIT-A | .66–.74 | .75–.126 |
+| 31 DevIT-B | .130–.138 | .139–.190 |
+| 40 Soporte | .66–.69 | .70–.78 |
+| 50 Servers | .2–.30 (todo estático) | — |
+| 60 VoIP | — | .82–.94 (DHCP option 66/150 para aprovisionamiento) |
+| 70 DMZ | .98–.102 (todo estático) | — |
+| 80 Cloud-Mgmt | .106–.110 (todo estático) | — |
+| 90 Mgmt | .34–.62 (todo estático) | — |
+| 200 VPN-pool | — | Asignado por WireGuard (no DHCP) |
+
+## 3. Enlace punto a punto Core ↔ Nube Privada
 
 | Enlace | Subred | R1 | VR1 |
 |---|---|---|---|
-| R1 ↔ VR1 (OSPF, UTP Cat 6) | 10.10.254.0/30 | 10.10.254.1 | 10.10.254.2 |
+| R1 ↔ VR1 (OSPF, UTP Cat 6) | 172.20.1.120/30 | 172.20.1.121 | 172.20.1.122 |
 
-## Router-IDs OSPF (loopbacks, buena práctica para estabilidad de OSPF)
+Bloque de 4 direcciones (`/30`), 2 utilizables — convención estándar para un enlace de 2 puntos, sin restar una tercera dirección de "gateway" porque ninguno de los dos routers necesita una puerta de enlace distinta de su propia interfaz.
+
+## 4. Router-IDs OSPF (loopbacks, buena práctica para estabilidad de OSPF)
 
 | Router | Loopback / Router-ID |
 |---|---|
-| R1 | 10.10.255.1/32 |
-| VR1 | 10.10.255.2/32 |
+| R1 | 172.20.254.1/32 |
+| VR1 | 172.20.254.2/32 |
 
-## Asignaciones estáticas clave (VLAN 50 / 70 / 80)
+Usar direcciones de loopback dedicadas (`/32`) como Router-ID es una práctica estándar de estabilidad en OSPF: a diferencia de una interfaz física, un loopback nunca cae, lo que evita que la adyacencia OSPF se reinicie si una interfaz física específica tiene una falla intermitente.
+
+## 5. Asignaciones estáticas clave (VLAN 50 / 70 / 80)
 
 | VM | VLAN | IP |
 |---|---|---|
-| vm-dhcp | 50 | 10.10.50.10 |
-| vm-proxy | 50 | 10.10.50.11 |
-| vm-mail | 50 | 10.10.50.12 |
-| vm-monitor (Zabbix) | 50 | 10.10.50.13 |
-| vm-intranet (Nextcloud) | 50 | 10.10.50.14 |
-| vm-vpn (WireGuard, si no va en R1) | 50 | 10.10.50.15 |
-| vm-web (Nginx) | 70 | 10.10.70.10 |
+| vm-dhcp | 50 | 172.20.1.2 |
+| vm-proxy | 50 | 172.20.1.3 |
+| vm-mail | 50 | 172.20.1.4 |
+| vm-monitor (Zabbix) | 50 | 172.20.1.5 |
+| vm-intranet (Nextcloud) | 50 | 172.20.1.6 |
+| vm-vpn (WireGuard, si no va en R1) | 50 | 172.20.1.7 |
+| vm-voip | 50 | 172.20.1.8 |
+| vm-web (Nginx) | 70 | 172.20.1.98 |
+| SV1 (switch virtual, gestión) | 80 | 172.20.1.106 |
 
-## Reglas de ruteo entre VLANs (resumen — detalle de firewall en documentos 03/04)
+Quedan direcciones libres (172.20.1.9–.30 en Servidores) para los hosts físicos de virtualización adicionales del roadmap de producción, sin necesidad de re-dimensionar la subred.
+
+## 6. Reglas de ruteo entre VLANs (resumen — detalle de firewall en documentos 03/04)
 
 - **Todas las VLANs de usuarios (10/20/30/31/40/60)** pueden llegar a VLAN 50 (Servidores) en los puertos de servicio específicos (SMTP/IMAP, HTTP Nextcloud, DHCP relay) — no acceso total.
 - **DMZ (70)** no puede iniciar conexión hacia ninguna VLAN interna.
 - **Cloud-Mgmt (80)** solo es alcanzable desde VLAN 90 (Gestión) y desde R1 vía OSPF — no expuesta a usuarios finales.
 - **VPN (200)** entra con los mismos permisos que la VLAN de origen del usuario remoto (mapeo por perfil WireGuard).
-
-## Nota sobre VLSM (optimización opcional, no obligatoria para la entrega)
-
-Usar `/24` fijo por VLAN es simple y defendible, pero desperdicia direcciones en VLANs pequeñas (ej. VLAN 60 con 6 dispositivos usando 254 disponibles). Si se quiere sumar puntos extra mostrando dominio de VLSM, se puede resegmentar así manteniendo el mismo bloque `10.10.0.0/16`:
-
-| VLAN | Tamaño real necesario | Máscara VLSM sugerida |
-|---|---|---|
-| VLAN 60 (VoIP, 6 equipos) | /28 (14 hosts) sobra | 10.10.60.0/28 |
-| VLAN 90 (Gestión) | /28 sobra | 10.10.90.0/28 |
-| VLAN 254 (enlace R1-VR1) | /30 (ya aplicado arriba) | 10.10.254.0/30 |
-
-Se documenta como mejora opcional para no comprometer la claridad del esquema principal, que ya usa `/24` uniforme.
