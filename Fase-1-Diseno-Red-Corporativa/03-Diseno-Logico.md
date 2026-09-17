@@ -108,7 +108,7 @@ El marcado se aplica en el punto de entrada más cercano al origen (en R1 para t
 
 ## 6. Direccionamiento IP y cumplimiento normativo
 
-- Todo el direccionamiento usa espacio privado **RFC 1918** (`172.20.0.0/16`), NAT en R1 hacia las 2 salidas de Internet.
+- Todo el direccionamiento usa espacio privado **RFC 1918** (`172.16.0.0/16`), NAT en R1 hacia las 2 salidas de Internet.
 - Segmentación por VLAN conforme **IEEE 802.1Q** (trunking estándar, no propietario — portable entre fabricantes, relevante porque el diseño mezcla MikroTik con el switch Easy Smart de otra marca).
 - Ver tabla maestra completa de VLANs, subredes, gateways y rangos DHCP en [07-Direccionamiento-IP-VLANs.md](../00-Documentacion-General/07-Direccionamiento-IP-VLANs.md). Cada VLAN usa una máscara **VLSM ajustada a su necesidad real de hosts** (no un `/24` parejo) — la suma de los bloques VLSM de las 12 VLANs supera los 256 direcciones que caben en un solo bloque tamaño Clase C, lo que determina que el bloque base deba ser de tamaño Clase B (`/16`); el detalle completo de esa memoria de cálculo, VLAN por VLAN, está en el documento 07.
 

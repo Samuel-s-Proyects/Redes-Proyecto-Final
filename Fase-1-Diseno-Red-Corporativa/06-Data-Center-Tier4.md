@@ -83,25 +83,25 @@ Esta distinción no es un tecnicismo — es la diferencia entre un documento de 
 
 ### 3.1 Estimación de carga IT crítica
 
-Para dimensionar el UPS hay que partir de una estimación realista de consumo del equipo que alimentará. Esta memoria de cálculo ya refleja el diseño final de switching (§1.1-§1.2 de [04-Diseno-Fisico.md](04-Diseno-Fisico.md)): **10 switches de acceso + 1 de distribución**, no el conteo preliminar de una versión anterior:
+Para dimensionar el UPS hay que partir de una estimación realista de consumo del equipo que alimentará. Esta memoria de cálculo ya refleja el diseño final de switching (§1.1-§1.2 de [04-Diseno-Fisico.md](04-Diseno-Fisico.md)): **10 switches de acceso + 2 de distribución**, no el conteo preliminar de una versión anterior:
 
 | Equipo | Cantidad | Consumo unitario estimado | Subtotal |
 |---|---|---|---|
 | Router Core (R1, redundante, MikroTik CCR2004-16G-2S+) | 2 | 30 W | 60 W |
 | Switch de distribución (redundante, MikroTik CRS326-24S+2Q+RM — ver [04-Diseno-Fisico.md](04-Diseno-Fisico.md) §1.1.1) | 2 | 60 W | 120 W |
 | Switches de acceso 48p PoE+ (MikroTik CRS354-48P-4S+2Q+RM) | 10 | 120 W | 1,200 W |
-| Servidores físicos (host de virtualización, redundantes) | 3 | 450 W | 1,350 W |
+| Servidores físicos (host de virtualización, redundantes) | 2 | 450 W | 900 W |
 | Almacenamiento (NAS/SAN si aplica) | 1 | 300 W | 300 W |
 | PBX/gateway de telefonía IP (`vm-voip` + ATA) | 1 | 50 W | 50 W |
-| **Total carga IT crítica estimada** | | | **≈ 3,080 W** |
+| **Total carga IT crítica estimada** | | | **≈ 2,630 W** |
 
 **Nota sobre los 120 W/switch de acceso**: el CRS354-48P-4S+2Q+RM tiene una placa de potencia máxima de 700 W, pero ese número es el techo teórico con los 48 puertos entregando PoE+ a plena carga simultáneamente — algo que no ocurre en este diseño, donde solo 6 teléfonos IP en total (§1.3 de doc04) consumen PoE real y el resto de los ~330 puntos son datos puros. 120 W/switch es una estimación conservadora de operación típica (switching + un puñado de puertos PoE activos), no el máximo de placa; usar el máximo de placa (700 W × 10 = 7,000 W) sobredimensionaría el UPS varias veces por encima de la necesidad real.
 
 ### 3.2 Cálculo de capacidad del UPS
 
-1. Convertir a VA usando un factor de potencia típico de UPS moderno (0.9): `3,080 W ÷ 0.9 ≈ 3,422 VA`.
-2. Aplicar margen de crecimiento/seguridad del 30% (estándar de la industria para no operar un UPS al límite, lo que reduce su vida útil): `3,422 × 1.3 ≈ 4,449 VA`.
-3. Redondear al tamaño comercial disponible más próximo: **UPS de 5-6 kVA** como unidad base — se elige 6 kVA porque es el tamaño confirmado disponible en el mercado guatemalteco (ver equipo real abajo) y deja margen adicional para crecimiento (nuevos servicios, un cuarto host de virtualización) sin tener que re-dimensionar toda la rama eléctrica en el corto plazo.
+1. Convertir a VA usando un factor de potencia típico de UPS moderno (0.9): `2,630 W ÷ 0.9 ≈ 2,922 VA`.
+2. Aplicar margen de crecimiento/seguridad del 30% (estándar de la industria para no operar un UPS al límite, lo que reduce su vida útil): `2,922 × 1.3 ≈ 3,799 VA`.
+3. Redondear al tamaño comercial disponible más próximo: **UPS de 5-6 kVA** como unidad base — se elige 6 kVA porque es el tamaño confirmado disponible en el mercado guatemalteco (ver equipo real abajo) y deja margen adicional para crecimiento (nuevos servicios, un tercer host de virtualización) sin tener que re-dimensionar toda la rama eléctrica en el corto plazo.
 
 ### 3.3 Aplicación del criterio 2N — equipo real, no genérico
 
@@ -121,7 +121,7 @@ No se instala **un** UPS de 6 kVA — se instalan **dos, independientes** (rama 
 
 ### 3.4 Planta eléctrica (generador)
 - Generador diésel con **ATS (Automatic Transfer Switch)** a nivel de acometida general, que detecta la caída del suministro comercial y transfiere la carga automáticamente — tiempo de transferencia típico 10–15 segundos, cubierto sin interrupción por la autonomía del UPS (§3.3).
-- **Dimensionamiento**: la carga IT crítica calculada (§3.1, ≈3,080 W ≈ 3.4 kVA) es solo una fracción de lo que el generador debe cubrir — en un Data Center Tier IV real el generador también respalda el propio sistema de enfriamiento (§4, que consume bastante más que el equipo de TI que enfría) y, típicamente, cargas del edificio con continuidad crítica (iluminación de emergencia, VoIP, control de acceso). Con ese criterio, un generador de referencia en el rango de **10-15 kVA** dedicado al Data Center (no al edificio completo, que es alcance de ingeniería eléctrica aparte y excede este documento) da margen realista para IT + HVAC + cargas de emergencia sin sobredimensionar innecesariamente. El dimensionamiento final de detalle (curva de arranque de los compresores del CRAC, factor de arranque de motores, etc.) requiere ingeniería eléctrica de detalle con firma de ingeniero colegiado, como cualquier instalación de esta naturaleza.
+- **Dimensionamiento**: la carga IT crítica calculada (§3.1, ≈2,630 W ≈ 2.9 kVA) es solo una fracción de lo que el generador debe cubrir — en un Data Center Tier IV real el generador también respalda el propio sistema de enfriamiento (§4, que consume bastante más que el equipo de TI que enfría) y, típicamente, cargas del edificio con continuidad crítica (iluminación de emergencia, VoIP, control de acceso). Con ese criterio, un generador de referencia en el rango de **10-15 kVA** dedicado al Data Center (no al edificio completo, que es alcance de ingeniería eléctrica aparte y excede este documento) da margen realista para IT + HVAC + cargas de emergencia sin sobredimensionar innecesariamente. El dimensionamiento final de detalle (curva de arranque de los compresores del CRAC, factor de arranque de motores, etc.) requiere ingeniería eléctrica de detalle con firma de ingeniero colegiado, como cualquier instalación de esta naturaleza.
 - Proveedores/distribuidores de generadores diésel con ATS en Guatemala para cotización directa: Kemik.gt, MacroCity Guatemala, DECA (Distribuidora Eléctrica Centroamericana) — el precio varía fuertemente según marca, nivel de insonorización y costo de instalación/obra civil, por lo que no se fija aquí una cifra única sin cotización directa.
 - Autonomía de combustible objetivo: 8–24 horas continuas, con contrato de reabastecimiento de emergencia para eventos prolongados (práctica frecuente en diseños Tier IV reales).
 
@@ -130,9 +130,9 @@ No se instala **un** UPS de 6 kVA — se instalan **dos, independientes** (rama 
 ### 4.1 Carga térmica
 Toda la energía eléctrica que consume el equipo de TI se convierte casi en su totalidad en calor. Conversión estándar: **1 W ≈ 3.412 BTU/hr**.
 
-`3,080 W × 3.412 ≈ 10,509 BTU/hr` solo de carga IT. A esto se le suma la ganancia térmica del propio cuarto (personas, iluminación, envolvente del edificio) — para un cuarto de Data Center pequeño (~15–20 m²) se estima un adicional de ~4,500–6,000 BTU/hr por estos factores.
+`2,630 W × 3.412 ≈ 8,974 BTU/hr` solo de carga IT. A esto se le suma la ganancia térmica del propio cuarto (personas, iluminación, envolvente del edificio) — para un cuarto de Data Center pequeño (~15–20 m²) se estima un adicional de ~4,500–6,000 BTU/hr por estos factores.
 
-`Total ≈ 15,000–16,500 BTU/hr`, equivalente a **≈1.25–1.38 toneladas de refrigeración** (1 tonelada = 12,000 BTU/hr).
+`Total ≈ 13,500–15,000 BTU/hr`, equivalente a **≈1.12–1.25 toneladas de refrigeración** (1 tonelada = 12,000 BTU/hr).
 
 ### 4.2 Selección de equipo y redundancia
 - Se redondea hacia arriba a unidades comerciales disponibles: **2 unidades CRAC/CRAH de 2 toneladas cada una**, en configuración **2N** (cada unidad sola cubre el 100% de la carga calculada, con margen).
